@@ -1,0 +1,337 @@
+---
+title: "SCORE: Kim & Radoias (2016) reproduction"
+subtitle: "Data preparation"
+author: "Radek Panczak"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::robobook:
+  code_folding: show
+self_contained: true
+highlight: pygments
+editor_options: 
+  chunk_output_type: console
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../docs") })
+---
+
+<!-- ----------------------------------------------------- -->
+
+```{r setup, include = FALSE}
+set.seed(12345)
+options(scipen = 999)
+options(max.print = "75")
+library(pacman)
+p_load(tidyverse, magrittr, scales, haven, lubridate, sjmisc)
+```
+
+```{r knit-setup, include = FALSE}
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+knitr::opts_chunk$set(cache = FALSE,
+                      prompt = FALSE,
+                      tidy = FALSE,
+                      comment = NA,
+                      message = FALSE,
+                      warning = FALSE)
+knitr::opts_knit$set(width = 125)
+mu <- Hmisc::markupSpecs$html
+```
+
+<!-- ------------------------------------------------------------ --> 
+
+# Data source 
+
+The fourth wave of the Indonesia Family Life Survey (IFLS4) available for download [here](https://www.rand.org/well-being/social-and-behavioral-policy/data/FLS/IFLS/ifls4.html).  
+
+Documentation is [here](https://www.rand.org/well-being/social-and-behavioral-policy/data/FLS/IFLS/download.html).  
+
+# Variables
+
+## DOB, age, sex, blood pressure
+
+From `bus1_1.dta` file:   
+
+`us00`      Respondent measured?
+1. Yes
+
+`us01`      Sex  
+1. Male
+3. Female
+                   
+`us03`      Age  
+  
+`us02yr`    Year of birth  
+  
+`us07bx`    Blood pressure (2nd measurement)  
+`us07b1`    Blood pressure (2nd measurement)  
+`us07b2`    Blood pressure (2nd measurement)  
+`us07bp`    Blood pressure (2nd measurement)  
+  
+From `bus1_2.dta` file:    
+  
+`us07cx`    Blood pressure (3rd measurement)  
+`us07c1`    Blood pressure (3rd measurement)  
+`us07c2`    Blood pressure (3rd measurement)  
+`us07cp`    Blood pressure (3rd measurement)  
+  
+Selecting respondents with non- missing info on sex and age, those equal or above 45 years of age and those with non-missing info on blood pressure measurements.   
+
+At next step the second and third bp measures mere averaged and finally hypertensive individuals only were retained.  
+
+```{r}
+bus1_1 <- read_dta("data-raw/IFLS4/hh07_all_dta/bus1_1.dta") %>% 
+  select(hhid07_9,hhid07, pid07,
+         us00,
+         us01, us03,
+         us02yr,
+         us07bx, us07b1, us07b2) %>% 
+  # only measured respondends
+  filter(us00 == 1) %>% 
+  select(-us00) %>% 
+  # missing sex
+  filter(!is.na(us01)) %>% 
+  # age selection
+  filter(us03 >= 45) %>% 
+  # missing age
+  filter(us03 < 998) %>% 
+  # bp1 measured
+  filter(us07bx == 1) %>% 
+  select(-us07bx) %>% 
+  # missing bp
+  filter(us07b1 != 999) %>% 
+  filter(us07b2 != 999) %>% 
+  # implausible dates
+  filter(us02yr < 9998) 
+
+bus1_2 <- read_dta("data-raw/IFLS4/hh07_all_dta/bus1_2.dta") %>% 
+  select(hhid07, pid07,
+         us07cx, us07c1, us07c2) %>% 
+  # bp2 measured
+  filter(us07cx == 1) %>% 
+  # missing bp
+  filter(us07c1 != 999) %>% 
+  filter(us07c2 != 999) %>% 
+  select(-us07cx)
+
+bus_1 <- 
+  inner_join(bus1_1, bus1_2) %>%
+  # average of bp measures
+  rowwise() %>% 
+  mutate(us071 = mean(c(us07b1, us07c1), na.rm = FALSE),
+         us072 = mean(c(us07b2, us07c2), na.rm = FALSE)) %>% 
+  ungroup() %>% 
+  select(-us07b1, -us07c1, -us07b2, -us07c2) %>% 
+  # selecting hypertensive
+  filter(us071 > 140 | us072 > 90) %>% 
+  select(-us071, -us072) %>%
+  rename(sex = us01,
+         age = us03) %>% 
+  mutate(age2 = age*age) %>% 
+  relocate(age2, .after = age)
+
+rm(bus1_1, bus1_2)
+```
+
+```{r}
+frq(bus_1, sex)
+
+descr(bus_1, age)
+```
+
+## Hypertension diagnosed
+
+From `b3b_cd3.dta` file.   
+
+`cdtype`    Type chronic conditions  
+A. Hypertension  
+  
+`cd05`    Has a doctor ever told you that you had  
+1. Yes   
+  
+```{r}
+b3b_cd3  <- read_dta("data-raw/IFLS4/hh07_all_dta/b3b_cd3.dta") %>% 
+  select(pid07, hhid07,
+         cd05, cdtype) %>% 
+  filter(cdtype == "A") %>% 
+  select(-cdtype) %>% 
+  # excluding missing
+  filter(cd05 != 9) %>% 
+  mutate(cd05 = ifelse(cd05 == 3, 0, cd05)) %>% 
+  rename(hyper_diag = cd05)
+```
+
+```{r}
+frq(b3b_cd3, hyper_diag)
+```
+
+## Household expenditures
+
+From `b1_ks2.dta` file.   
+
+`ks06`    nonfood expenditure last month (Rp)  
+
+Multiple types of expenditures are aggregated by household.  
+
+```{r}
+b1_ks2  <- read_dta("data-raw/IFLS4/hh07_all_dta/b1_ks2.dta") %>% 
+  select(hhid07,
+         ks06) %>% 
+  group_by(hhid07) %>% 
+  summarize(expenditures = sum(ks06))
+```
+
+```{r}
+descr(b1_ks2, expenditures)
+```
+
+## Health status
+
+From `b3b_kk1.dta` file.  
+
+`kk01`    Generally how is your health?  
+
+1. Very healthy
+2. Fairly healthy
+3. In poor health
+4. Very sick
+
+```{r}
+b3b_kk1  <- read_dta("data-raw/IFLS4/hh07_all_dta/b3b_kk1.dta") %>% 
+  select(pid07, hhid07,
+         kk01) %>% 
+  mutate(bad_health = ifelse(kk01 >= 3, 1, 0)) %>% 
+  select(-kk01)
+```
+
+```{r}
+frq(b3b_kk1, bad_health)
+```
+
+## Distance to Health facilities
+
+Again paper is rather cryptic and specifies it only as:  
+
+> the distance from the closest health center (to proxy for the ease of access to medical care)  
+
+`pp5`       One way travel time (unit of measurement)  
+
+`pptype`    Type of out-patient facility  
+C. Public Health Center/Auxiliary Center   
+
+
+```{r}
+b1_pp  <- read_dta("data-raw/IFLS4/hh07_all_dta/b1_pp.dta") %>% 
+  select(hhid07_9,
+         pptype,
+         pp5, pp5x) %>% 
+  # exclude missings
+  filter(pp5x < 30) %>% 
+  # facility type
+  filter(pptype == "C") %>% 
+  select(-pptype) %>% 
+  # standardize other units to minutes
+  mutate(pp5 = ifelse(pp5x == 2, pp5*60, pp5)) %>% 
+  mutate(pp5 = ifelse(pp5x == 3, pp5*24*60, pp5)) %>% 
+  select(-pp5x) %>% 
+  rename(travel_time = pp5)
+```
+
+```{r}
+# frq(b1_pp, pp5x)
+descr(b1_pp, travel_time)
+```
+
+## Education
+
+Paper defines it as: 
+
+> measured in years of formal education
+
+From `b3a_dl1.dta` file we can grab:    
+
+`dl05a`    At what age did you enter school  
+
+`dl07byr`  Year graduated or left school  
+
+`dl07d`   IVWR NOTE: Still in school
+1. Yes
+
+These together with `dob` can be used to obtain crude years of education.  
+```{r}
+b3a_dl1 <- read_dta("data-raw/IFLS4/hh07_all_dta/b3a_dl1.dta") %>% 
+  select(pid07, hhid07,
+         dl07d, 
+         dl05a, dl07byr) %>% 
+  # if still in school replace to 2007, year of survey
+  mutate(dl07byr = ifelse (is.na(dl07byr) & dl07d == 1, 2007, dl07byr)) %>% 
+  filter(!is.na(dl05a) & !is.na(dl07byr)) %>% 
+  # missings
+  filter(dl07byr < 9998) %>% 
+  filter(dl05a < 98)
+```
+
+## Risk & time preference
+
+> For the timeand risk preference parameters, we follow Ng (2013) and group respondents in four distinct groups from the most patient to themost impatient, respectively from the least risk averse to the most risk averse. 
+
+```{r}
+# b3a_si <- read_dta("data-raw/IFLS4/hh07_all_dta/b3a_si.dta") %>% 
+#   select(pid07, hhid07,
+#          ) 
+```
+
+TBD..  
+
+## Disease management
+
+> We construct a dummy variable that isequal to 1 if respondents checked their blood pressure at least oncein the month preceding the interview. Disease management doesnotapply to individuals who arenot aware of having any disease, sowe restrict our sample to those respondents who were previouslydiagnosed with hypertension. 
+
+TBD..  
+
+# Final join
+
+Starting with restrictive missing handling
+
+```{r}
+data <- bus_1 %>% 
+  
+  # hyper diagnosis
+  left_join(b3b_cd3) %>% 
+  # exclude missings
+  filter(!is.na(hyper_diag)) %>% 
+  
+  # expenditures
+  left_join(b1_ks2) %>% 
+  # exclude missings
+  filter(!is.na(expenditures)) %>% 
+  # exclude 0s
+  filter(expenditures > 0) %>% 
+  # log
+  mutate(expenditures_log = log(expenditures)) %>% 
+  select(-expenditures) %>% 
+  
+  # bad health
+  left_join(b3b_kk1) %>% 
+  # exclude missings
+  filter(!is.na(bad_health)) %>%  
+  
+  # distance
+  left_join(b1_pp) %>% 
+  # exclude missings
+  filter(!is.na(travel_time)) %>% 
+  
+  # education
+  left_join(b3a_dl1) %>% 
+  # calculate years of education
+  mutate(education = dl07byr - us02yr - dl05a) %>% 
+  select(-dl07byr, -us02yr, -dl05a)
+
+# rm(bus_1, b3b_cd3, b1_ks2, b3b_kk1, b1_pp)
+```
+
+```{r}
+frq(data, hyper_diag)
+frq(data, sex)
+frq(data, bad_health)
+
+gmodels::CrossTable(data$sex, data$hyper_diag)
+```
