@@ -75,10 +75,10 @@ From `bus1_2.dta` file:
 
 Selecting 
 
- - 'measured' respondents 
- - respondents with non-missing info on sex and age
- - respondents 45 years of age and above
- - respondents with non-missing info on blood pressure measurements.   
+- 'measured' respondents 
+- respondents with non-missing info on sex and age
+- respondents 45 years of age and above
+- respondents with non-missing info on blood pressure measurements.   
 
 At next step the second and third bp measures were averaged and finally hypertensive individuals only were retained.  
 
@@ -281,7 +281,8 @@ b3a_dl1 <- read_dta("data-raw/IFLS4/hh07_all_dta/b3a_dl1.dta") %>%
   filter(!is.na(dl05a) & !is.na(dl07byr)) %>% 
   # missings
   filter(dl07byr < 9998) %>% 
-  filter(dl05a < 98)
+  filter(dl05a < 98) %>% 
+  select(dl07d)
 ```
 
 ## Risk & time preference
@@ -302,9 +303,66 @@ TBD..
 
 > Disease management does not apply to individuals who are not aware of having any disease, so we restrict our sample to those respondents who were previously diagnosed with hypertension.  
 
-TBD..  
+From `b3b_rj3.dta` file we can grab:    
 
-# Final join
+`rj24amth`    Last blood pressure check (month)  
+`rj24ayr`     Last blood pressure check (year)  
+
+
+```{r}
+b3b_rj3 <- read_dta("data-raw/IFLS4/hh07_all_dta/b3b_rj3.dta") %>% 
+  # zap_label() %>% 
+  select(pid07, hhid07_9,
+         rj24amth, rj24ayr) %>% 
+  # missings
+  filter(!is.na(rj24amth)) %>% 
+  filter(!is.na(rj24ayr)) %>% 
+  filter(rj24amth < 98) %>% 
+  filter(rj24ayr < 9998) %>% 
+  mutate(bp_date = ymd(paste(rj24ayr, rj24amth, 1, sep= " "))) 
+```
+
+From the file `b1_cov.dta` we can grab:  
+
+`ivwday1`       Date of intrvw (day of month)(1)
+`ivwmth1`       Date of interview (month)(1)
+`ivwyr1`        Date of Visit (year)(1)
+
+```{r}
+b1_cov <- read_dta("data-raw/IFLS4/hh07_all_dta/b1_cov.dta") %>% 
+  # zap_label() %>% 
+  select(pid07, hhid07_9,
+         # ivwday1, # fixing 1st to correctly get differences
+         ivwmth1, ivwyr1) %>% 
+  filter(!is.na(ivwmth1)) %>% 
+  filter(!is.na(ivwyr1)) %>% 
+  mutate(ivwyr1 = ivwyr1 + 2000) %>% 
+  mutate(iv_date = ymd(paste(ivwyr1, ivwmth1, 1, sep= " "))) 
+```
+
+These dates can be then compared to generate an indicator of measurement in the month proceeding the interview.  
+
+Note: values of BP measurement that are dated **after** date of interview are considered implausible and do not count towards the positive indicator.  
+
+```{r}
+b3b_rj3 %<>% inner_join(b1_cov) %>% 
+  mutate(bp_dist = as.numeric(iv_date - bp_date)) %>% 
+  mutate(bp_month = if_else(bp_dist > 0 & bp_dist <= 31, 1, 0)) %>% 
+  select(-ivwyr1, -ivwmth1,
+         - rj24ayr, -rj24amth,
+         -iv_date, -bp_date,
+         -bp_dist)
+
+rm(b1_cov)
+```
+
+```{r}
+frq(b3b_rj3, bp_month)
+```
+
+# Final dataset
+
+## Merging together
 
 Starting with restrictive missing handling
 
@@ -340,10 +398,22 @@ data <- bus_1 %>%
   left_join(b3a_dl1) %>% 
   # calculate years of education
   mutate(education = dl07byr - us02yr - dl05a) %>% 
-  select(-dl07byr, -us02yr, -dl05a)
+  select(-dl07byr, -us02yr, -dl05a) %>% 
+  
+  # disease management
+  left_join(b3b_rj3)
 
-# rm(bus_1, b3b_cd3, b1_ks2, b3b_kk1, b1_pp)
+# rm(bus_1, b3b_cd3, b1_ks2, b3b_kk1, b1_pp, b3b_rj3)
 ```
+
+## Dataset
+
+```{r}
+report::report(data)
+```
+
+
+## Summaries
 
 ```{r}
 frq(data, underdiagnosed)
@@ -352,4 +422,6 @@ frq(data, bad_health)
 
 gmodels::CrossTable(data$sex, data$underdiagnosed,
                     digits = 2, prop.chisq = FALSE)
+
+frq(data %>% filter(underdiagnosed == 0), bp_month)
 ```
