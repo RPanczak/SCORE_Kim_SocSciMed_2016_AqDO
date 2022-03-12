@@ -85,22 +85,24 @@ At next step the second and third bp measures were averaged and finally hyperten
 ```{r}
 bus1_1 <- read_dta("data-raw/IFLS4/hh07_all_dta/bus1_1.dta") %>% 
   # zap_label() %>% 
+  zap_labels() %>% zap_formats() %>%
   select(hhid07_9,hhid07, pid07,
          us00,
          us01, us03,
          us02yr,
          us07bx, us07b1, us07b2) %>% 
-  # only measured respondents
-  filter(us00 == 1) %>% 
-  select(-us00) %>% 
+  mutate_all(as.numeric) %>% 
   # missing sex
   filter(!is.na(us01)) %>% 
   # implausible DOB
-  filter(us02yr < 9998) %>% 
+  mutate(us02yr = if_else(us02yr >= 9998, NA_real_, us02yr)) %>% 
   # missing age
   filter(us03 < 998) %>% 
   # age inclusion
   filter(us03 >= 45) %>% 
+  # only measured respondents
+  filter(us00 == 1) %>% 
+  select(-us00) %>% 
   # bp1 measured
   filter(us07bx == 1) %>% 
   select(-us07bx) %>% 
@@ -110,8 +112,10 @@ bus1_1 <- read_dta("data-raw/IFLS4/hh07_all_dta/bus1_1.dta") %>%
 
 bus1_2 <- read_dta("data-raw/IFLS4/hh07_all_dta/bus1_2.dta") %>% 
   # zap_label() %>% 
+  zap_labels() %>% zap_formats() %>%
   select(hhid07, pid07,
          us07cx, us07c1, us07c2) %>% 
+  mutate_all(as.numeric) %>% 
   # bp2 measured
   filter(us07cx == 1) %>% 
   # missing bp
@@ -141,7 +145,7 @@ rm(bus1_1, bus1_2)
 ```{r}
 frq(bus_1, sex)
 
-descr(bus_1, age)
+summary(bus_1$age)
 ```
 
 ## Hypertension diagnosed
@@ -157,10 +161,12 @@ A. Hypertension
 ```{r}
 b3b_cd3  <- read_dta("data-raw/IFLS4/hh07_all_dta/b3b_cd3.dta") %>% 
   # zap_label() %>% 
+  zap_labels() %>% zap_formats() %>%
   select(pid07, hhid07,
          cd05, cdtype) %>% 
   filter(cdtype == "A") %>% 
   select(-cdtype) %>% 
+  mutate_all(as.numeric) %>% 
   # excluding missing
   filter(cd05 != 9) %>% 
   # outcome is NO diagnosis
@@ -184,14 +190,17 @@ Multiple types of expenditures are aggregated by household.
 ```{r}
 b1_ks2  <- read_dta("data-raw/IFLS4/hh07_all_dta/b1_ks2.dta") %>% 
   # zap_label() %>% 
+  zap_labels() %>% zap_formats() %>%
   select(hhid07,
          ks06) %>% 
+  mutate_all(as.numeric) %>% 
   group_by(hhid07) %>% 
-  summarize(expenditures = sum(ks06))
+  summarize(expenditures = sum(ks06)) %>% 
+  ungroup()
 ```
 
 ```{r}
-descr(b1_ks2, expenditures)
+summary(b1_ks2$expenditures)
 ```
 
 ## Health status
@@ -208,14 +217,16 @@ From `b3b_kk1.dta` file.
 ```{r}
 b3b_kk1  <- read_dta("data-raw/IFLS4/hh07_all_dta/b3b_kk1.dta") %>% 
   # zap_label() %>% 
+  zap_labels() %>% zap_formats() %>%
   select(pid07, hhid07,
          kk01) %>% 
-  mutate(bad_health = ifelse(kk01 >= 3, 1, 0)) %>% 
+  mutate_all(as.numeric) %>% 
+  mutate(poor_health = ifelse(kk01 >= 3, 1, 0)) %>% 
   select(-kk01)
 ```
 
 ```{r}
-frq(b3b_kk1, bad_health)
+frq(b3b_kk1, poor_health)
 ```
 
 ## Distance to Health facilities
@@ -233,14 +244,16 @@ C. Public Health Center/Auxiliary Center
 ```{r}
 b1_pp  <- read_dta("data-raw/IFLS4/hh07_all_dta/b1_pp.dta") %>% 
   # zap_label() %>% 
+  zap_labels() %>% zap_formats() %>%
   select(hhid07_9,
          pptype,
          pp5, pp5x) %>% 
-  # exclude missings
-  filter(pp5x < 30) %>% 
   # facility type
   filter(pptype == "C") %>% 
   select(-pptype) %>% 
+  mutate_all(as.numeric) %>% 
+  # exclude missings
+  filter(pp5x < 30) %>% 
   # standardize other units to minutes
   mutate(pp5 = ifelse(pp5x == 2, pp5*60, pp5)) %>% 
   mutate(pp5 = ifelse(pp5x == 3, pp5*24*60, pp5)) %>% 
@@ -249,8 +262,7 @@ b1_pp  <- read_dta("data-raw/IFLS4/hh07_all_dta/b1_pp.dta") %>%
 ```
 
 ```{r}
-# frq(b1_pp, pp5x)
-descr(b1_pp, travel_time)
+summary(b1_pp$travel_time)
 ```
 
 ## Education
@@ -261,11 +273,15 @@ Paper defines it as:
 
 From `b3a_dl1.dta` file we can grab:    
 
-`dl05a`    At what age did you enter school  
+`dl04`        Have you ever attended school?
 
-`dl07byr`  Year graduated or left school  
+`dl05a`       At what age did you enter school  
 
-`dl07d`   IVWR NOTE: Still in school
+`dl06`        Highest level of education attended
+
+`dl07byr`     Year graduated or left school  
+
+`dl07d`       IVWR NOTE: Still in school
 1. Yes
 
 These together with `dob` can be used to obtain crude years of education.  
@@ -273,16 +289,19 @@ These together with `dob` can be used to obtain crude years of education.
 ```{r}
 b3a_dl1 <- read_dta("data-raw/IFLS4/hh07_all_dta/b3a_dl1.dta") %>% 
   # zap_label() %>% 
+  zap_labels() %>% zap_formats() %>%
   select(pid07, hhid07,
+         dl04,
+         dl06,
          dl07d, 
          dl05a, dl07byr) %>% 
+  mutate_all(as.numeric) %>% 
   # if still in school replace to 2007, year of survey
   mutate(dl07byr = ifelse (is.na(dl07byr) & dl07d == 1, 2007, dl07byr)) %>% 
-  filter(!is.na(dl05a) & !is.na(dl07byr)) %>% 
   # missings
-  filter(dl07byr < 9998) %>% 
-  filter(dl05a < 98) %>% 
-  select(dl07d)
+  filter(dl07byr < 9998 | is.na(dl07byr)) %>%
+  filter(dl05a < 98 | is.na(dl07byr)) %>% 
+  select(-dl07d)
 ```
 
 ## Risk & time preference
@@ -312,8 +331,10 @@ From `b3b_rj3.dta` file we can grab:
 ```{r}
 b3b_rj3 <- read_dta("data-raw/IFLS4/hh07_all_dta/b3b_rj3.dta") %>% 
   # zap_label() %>% 
+  zap_labels() %>% zap_formats() %>%
   select(pid07, hhid07_9,
          rj24amth, rj24ayr) %>% 
+  mutate_all(as.numeric) %>% 
   # missings
   filter(!is.na(rj24amth)) %>% 
   filter(!is.na(rj24ayr)) %>% 
@@ -331,9 +352,11 @@ From the file `b1_cov.dta` we can grab:
 ```{r}
 b1_cov <- read_dta("data-raw/IFLS4/hh07_all_dta/b1_cov.dta") %>% 
   # zap_label() %>% 
+  zap_labels() %>% zap_formats() %>%
   select(pid07, hhid07_9,
          # ivwday1, # fixing 1st to correctly get differences
          ivwmth1, ivwyr1) %>% 
+  mutate_all(as.numeric) %>% 
   filter(!is.na(ivwmth1)) %>% 
   filter(!is.na(ivwyr1)) %>% 
   mutate(ivwyr1 = ivwyr1 + 2000) %>% 
@@ -364,7 +387,9 @@ frq(b3b_rj3, bp_month)
 
 ## Merging together
 
-Starting with restrictive missing handling
+Due to very large amount of missing information on the number of years of education, categorical variable of highest education achieved was used to impute values into simple four categories of 'elementary', 'junior high', 'senior high' and 'university'.  
+
+Similarly, large amount of missings in the disease management indicator was assumed to mean 'no'.  
 
 ```{r}
 data <- bus_1 %>% 
@@ -378,8 +403,8 @@ data <- bus_1 %>%
   left_join(b1_ks2) %>% 
   # exclude missings
   filter(!is.na(expenditures)) %>% 
-  # exclude 0s
-  filter(expenditures > 0) %>% 
+  # avoid 0s for log
+  mutate(expenditures = if_else(expenditures == 0, 1, expenditures)) %>% 
   # log
   mutate(expenditures_log = log(expenditures)) %>% 
   select(-expenditures) %>% 
@@ -387,7 +412,7 @@ data <- bus_1 %>%
   # bad health
   left_join(b3b_kk1) %>% 
   # exclude missings
-  filter(!is.na(bad_health)) %>%  
+  filter(!is.na(poor_health)) %>%  
   
   # distance
   left_join(b1_pp) %>% 
@@ -399,17 +424,41 @@ data <- bus_1 %>%
   # calculate years of education
   mutate(education = dl07byr - us02yr - dl05a) %>% 
   select(-dl07byr, -us02yr, -dl05a) %>% 
+  # zero for those who never attended
+  mutate(education = if_else(dl04 == 3, 0, education)) %>% 
+  select(-dl04) %>% 
+  # imputing education from cateogricals
+  # elementary school to 6
+  mutate(education = if_else(is.na(education) & dl06 == 2, 6, education)) %>% 
+  # junior high to 9
+  mutate(education = if_else(is.na(education) & 
+                               (dl06 == 3 | dl06 == 4), 9, education)) %>% 
+  # senior high to 12
+  mutate(education = if_else(is.na(education) & 
+                               (dl06 == 5 | dl06 == 6), 12, education)) %>% 
+  # uni to 16
+  mutate(education = if_else(is.na(education) & 
+                               (dl06 == 13 | dl06 == 60 | dl06 == 61), 16, education)) %>%   select(-dl06) %>% 
+  filter(!is.na(education)) %>%
+  filter(education >= 0) %>%
   
   # disease management
-  left_join(b3b_rj3)
+  left_join(b3b_rj3) %>% 
+  # second version imputing missing to zero (ie. 'no')
+  mutate(bp_month2 = ifelse(is.na(bp_month), 0, bp_month))
 
-# rm(bus_1, b3b_cd3, b1_ks2, b3b_kk1, b1_pp, b3b_rj3)
+# rm(bus_1, b3b_cd3, b1_ks2, b3b_kk1, b1_pp, b3a_dl1, b3b_rj3)
 ```
 
 ## Dataset
 
-```{r}
-report::report(data)
+```{r echo=FALSE}
+data %>% 
+  mutate(sex = factor(sex),
+         underdiagnosed = factor(underdiagnosed),
+         poor_health = factor(poor_health),
+         bp_month = factor(bp_month)) %>% 
+  report::report()
 ```
 
 
@@ -418,10 +467,12 @@ report::report(data)
 ```{r}
 frq(data, underdiagnosed)
 frq(data, sex)
-frq(data, bad_health)
 
 gmodels::CrossTable(data$sex, data$underdiagnosed,
                     digits = 2, prop.chisq = FALSE)
 
 frq(data %>% filter(underdiagnosed == 0), bp_month)
+
+frq(data, poor_health)
+# frq(data, education)
 ```
