@@ -42,7 +42,7 @@ mu <- Hmisc::markupSpecs$html
 
 The fourth wave of the Indonesia Family Life Survey (IFLS4) available for download [here](https://www.rand.org/well-being/social-and-behavioral-policy/data/FLS/IFLS/ifls4.html).  
 
-Documentation is [here](https://www.rand.org/well-being/social-and-behavioral-policy/data/FLS/IFLS/download.html).  
+Documentation is available [here](https://www.rand.org/well-being/social-and-behavioral-policy/data/FLS/IFLS/download.html).  
 
 # Variables
 
@@ -51,58 +51,65 @@ Documentation is [here](https://www.rand.org/well-being/social-and-behavioral-po
 From `bus1_1.dta` file:   
 
 `us00`      Respondent measured?
-1. Yes
+*1. Yes*
 
 `us01`      Sex  
 1. Male
 3. Female
-                   
+
 `us03`      Age  
-  
+
 `us02yr`    Year of birth  
-  
+
 `us07bx`    Blood pressure (2nd measurement)  
 `us07b1`    Blood pressure (2nd measurement)  
 `us07b2`    Blood pressure (2nd measurement)  
 `us07bp`    Blood pressure (2nd measurement)  
-  
+
 From `bus1_2.dta` file:    
-  
+
 `us07cx`    Blood pressure (3rd measurement)  
 `us07c1`    Blood pressure (3rd measurement)  
 `us07c2`    Blood pressure (3rd measurement)  
 `us07cp`    Blood pressure (3rd measurement)  
-  
-Selecting respondents with non- missing info on sex and age, those equal or above 45 years of age and those with non-missing info on blood pressure measurements.   
 
-At next step the second and third bp measures mere averaged and finally hypertensive individuals only were retained.  
+Selecting 
+
+ - 'measured' respondents 
+ - respondents with non-missing info on sex and age
+ - respondents 45 years of age and above
+ - respondents with non-missing info on blood pressure measurements.   
+
+At next step the second and third bp measures were averaged and finally hypertensive individuals only were retained.  
 
 ```{r}
 bus1_1 <- read_dta("data-raw/IFLS4/hh07_all_dta/bus1_1.dta") %>% 
+  # zap_label() %>% 
   select(hhid07_9,hhid07, pid07,
          us00,
          us01, us03,
          us02yr,
          us07bx, us07b1, us07b2) %>% 
-  # only measured respondends
+  # only measured respondents
   filter(us00 == 1) %>% 
   select(-us00) %>% 
   # missing sex
   filter(!is.na(us01)) %>% 
-  # age selection
-  filter(us03 >= 45) %>% 
+  # implausible DOB
+  filter(us02yr < 9998) %>% 
   # missing age
   filter(us03 < 998) %>% 
+  # age inclusion
+  filter(us03 >= 45) %>% 
   # bp1 measured
   filter(us07bx == 1) %>% 
   select(-us07bx) %>% 
   # missing bp
   filter(us07b1 != 999) %>% 
-  filter(us07b2 != 999) %>% 
-  # implausible dates
-  filter(us02yr < 9998) 
+  filter(us07b2 != 999) 
 
 bus1_2 <- read_dta("data-raw/IFLS4/hh07_all_dta/bus1_2.dta") %>% 
+  # zap_label() %>% 
   select(hhid07, pid07,
          us07cx, us07c1, us07c2) %>% 
   # bp2 measured
@@ -114,7 +121,7 @@ bus1_2 <- read_dta("data-raw/IFLS4/hh07_all_dta/bus1_2.dta") %>%
 
 bus_1 <- 
   inner_join(bus1_1, bus1_2) %>%
-  # average of bp measures
+  # average of two bp measures (2nd and tird)
   rowwise() %>% 
   mutate(us071 = mean(c(us07b1, us07c1), na.rm = FALSE),
          us072 = mean(c(us07b2, us07c2), na.rm = FALSE)) %>% 
@@ -143,24 +150,27 @@ From `b3b_cd3.dta` file.
 
 `cdtype`    Type chronic conditions  
 A. Hypertension  
-  
+
 `cd05`    Has a doctor ever told you that you had  
 1. Yes   
-  
+
 ```{r}
 b3b_cd3  <- read_dta("data-raw/IFLS4/hh07_all_dta/b3b_cd3.dta") %>% 
+  # zap_label() %>% 
   select(pid07, hhid07,
          cd05, cdtype) %>% 
   filter(cdtype == "A") %>% 
   select(-cdtype) %>% 
   # excluding missing
   filter(cd05 != 9) %>% 
-  mutate(cd05 = ifelse(cd05 == 3, 0, cd05)) %>% 
-  rename(hyper_diag = cd05)
+  # outcome is NO diagnosis
+  mutate(cd05 = ifelse(cd05 == 1, 0, cd05)) %>% 
+  mutate(cd05 = ifelse(cd05 == 3, 1, cd05)) %>% 
+  rename(underdiagnosed = cd05)
 ```
 
 ```{r}
-frq(b3b_cd3, hyper_diag)
+frq(b3b_cd3, underdiagnosed)
 ```
 
 ## Household expenditures
@@ -173,6 +183,7 @@ Multiple types of expenditures are aggregated by household.
 
 ```{r}
 b1_ks2  <- read_dta("data-raw/IFLS4/hh07_all_dta/b1_ks2.dta") %>% 
+  # zap_label() %>% 
   select(hhid07,
          ks06) %>% 
   group_by(hhid07) %>% 
@@ -196,6 +207,7 @@ From `b3b_kk1.dta` file.
 
 ```{r}
 b3b_kk1  <- read_dta("data-raw/IFLS4/hh07_all_dta/b3b_kk1.dta") %>% 
+  # zap_label() %>% 
   select(pid07, hhid07,
          kk01) %>% 
   mutate(bad_health = ifelse(kk01 >= 3, 1, 0)) %>% 
@@ -220,6 +232,7 @@ C. Public Health Center/Auxiliary Center
 
 ```{r}
 b1_pp  <- read_dta("data-raw/IFLS4/hh07_all_dta/b1_pp.dta") %>% 
+  # zap_label() %>% 
   select(hhid07_9,
          pptype,
          pp5, pp5x) %>% 
@@ -256,8 +269,10 @@ From `b3a_dl1.dta` file we can grab:
 1. Yes
 
 These together with `dob` can be used to obtain crude years of education.  
+
 ```{r}
 b3a_dl1 <- read_dta("data-raw/IFLS4/hh07_all_dta/b3a_dl1.dta") %>% 
+  # zap_label() %>% 
   select(pid07, hhid07,
          dl07d, 
          dl05a, dl07byr) %>% 
@@ -271,7 +286,7 @@ b3a_dl1 <- read_dta("data-raw/IFLS4/hh07_all_dta/b3a_dl1.dta") %>%
 
 ## Risk & time preference
 
-> For the timeand risk preference parameters, we follow Ng (2013) and group respondents in four distinct groups from the most patient to themost impatient, respectively from the least risk averse to the most risk averse. 
+> For the time and risk preference parameters, we follow Ng (2013) and group respondents in four distinct groups from the most patient to the most impatient, respectively from the least risk averse to the most risk averse.   
 
 ```{r}
 # b3a_si <- read_dta("data-raw/IFLS4/hh07_all_dta/b3a_si.dta") %>% 
@@ -283,7 +298,9 @@ TBD..
 
 ## Disease management
 
-> We construct a dummy variable that isequal to 1 if respondents checked their blood pressure at least oncein the month preceding the interview. Disease management doesnotapply to individuals who arenot aware of having any disease, sowe restrict our sample to those respondents who were previouslydiagnosed with hypertension. 
+> We construct a dummy variable that is equal to 1 if respondents checked their blood pressure at least once in the month preceding the interview.  
+
+> Disease management does not apply to individuals who are not aware of having any disease, so we restrict our sample to those respondents who were previously diagnosed with hypertension.  
 
 TBD..  
 
@@ -297,7 +314,7 @@ data <- bus_1 %>%
   # hyper diagnosis
   left_join(b3b_cd3) %>% 
   # exclude missings
-  filter(!is.na(hyper_diag)) %>% 
+  filter(!is.na(underdiagnosed)) %>% 
   
   # expenditures
   left_join(b1_ks2) %>% 
@@ -329,9 +346,10 @@ data <- bus_1 %>%
 ```
 
 ```{r}
-frq(data, hyper_diag)
+frq(data, underdiagnosed)
 frq(data, sex)
 frq(data, bad_health)
 
-gmodels::CrossTable(data$sex, data$hyper_diag)
+gmodels::CrossTable(data$sex, data$underdiagnosed,
+                    digits = 2, prop.chisq = FALSE)
 ```
