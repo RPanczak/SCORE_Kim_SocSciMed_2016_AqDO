@@ -7,7 +7,7 @@
 
         <meta name="author" content="Radek Panczak" />
     
-        <meta name="date" content="2022-03-12" />
+        <meta name="date" content="2022-03-25" />
     
     <title>SCORE: Kim &amp; Radoias (2016) reproduction</title>
 
@@ -1874,13 +1874,15 @@ reproduction</li>
           <li><a href="#dataset">Dataset</a></li>
           <li><a href="#summaries">Summaries</a></li>
           </ul></li>
+          <li><a href="#computing-environment">Computing
+          Environment</a></li>
           </ul>
         </nav>
         <ul class="authors">
           <li class="divider"></li>
                                 <li><span><i class="glyphicon glyphicon-user"></i> Radek
 Panczak</span></li>
-                                         <li><span><i class="glyphicon glyphicon-calendar"></i> 2022-03-12</span></li>
+                                         <li><span><i class="glyphicon glyphicon-calendar"></i> 2022-03-25</span></li>
                   </ul>     
       </div>
       <div class="book-body fixed">
@@ -1930,108 +1932,120 @@ for download <a href="https://www.rand.org/well-being/social-and-behavioral-poli
 <code>us07c1</code> Blood pressure (3rd measurement)<br />
 <code>us07c2</code> Blood pressure (3rd measurement)<br />
 <code>us07cp</code> Blood pressure (3rd measurement)</p>
-<p>Selecting</p>
+<p>Selecting:</p>
 <ul>
-<li>‘measured’ respondents</li>
-<li>respondents with non-missing info on sex and age</li>
+<li>only ‘measured’ respondents</li>
+<li>respondents with information on sex and age</li>
 <li>respondents 45 years of age and above</li>
-<li>respondents with non-missing info on blood pressure
-measurements.</li>
+<li>respondents with information on two blood pressure measurements (2nd
+&amp; 3rd measurement).</li>
 </ul>
-<p>At next step the second and third bp measures were averaged and
-finally hypertensive individuals only were retained.</p>
+<p>The second and third blood pressure measures were averaged and
+finally only hypertensive individuals were included</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>bus1_1 <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">&quot;data-raw/IFLS4/hh07_all_dta/bus1_1.dta&quot;</span>) <span class="sc">%&gt;%</span> </span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># zap_label() %&gt;% </span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">zap_labels</span>() <span class="sc">%&gt;%</span> <span class="fu">zap_formats</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(hhid07_9,hhid07, pid07,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(hhid07_9, hhid07, pid07,</span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>         us00,</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>         us01, us03,</span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>         us02yr,</span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>         us07bx, us07b1, us07b2) <span class="sc">%&gt;%</span> </span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_all</span>(as.numeric) <span class="sc">%&gt;%</span> </span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="co"># missing sex</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(us01)) <span class="sc">%&gt;%</span> </span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="co"># implausible DOB</span></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">us02yr =</span> <span class="fu">if_else</span>(us02yr <span class="sc">&gt;=</span> <span class="dv">9998</span>, <span class="cn">NA_real_</span>, us02yr)) <span class="sc">%&gt;%</span> </span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  <span class="co"># missing age</span></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(us03 <span class="sc">&lt;</span> <span class="dv">998</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  <span class="co"># age inclusion</span></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(us03 <span class="sc">&gt;=</span> <span class="dv">45</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  <span class="co"># only measured respondents</span></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(us00 <span class="sc">==</span> <span class="dv">1</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>us00) <span class="sc">%&gt;%</span> </span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>  <span class="co"># bp1 measured</span></span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(us07bx <span class="sc">==</span> <span class="dv">1</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>us07bx) <span class="sc">%&gt;%</span> </span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>  <span class="co"># missing bp</span></span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(us07b1 <span class="sc">!=</span> <span class="dv">999</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(us07b2 <span class="sc">!=</span> <span class="dv">999</span>) </span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>bus1_2 <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">&quot;data-raw/IFLS4/hh07_all_dta/bus1_2.dta&quot;</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>  <span class="co"># zap_label() %&gt;% </span></span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">zap_labels</span>() <span class="sc">%&gt;%</span> <span class="fu">zap_formats</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(hhid07, pid07,</span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>         us07cx, us07c1, us07c2) <span class="sc">%&gt;%</span> </span>
-<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_all</span>(as.numeric) <span class="sc">%&gt;%</span> </span>
-<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>  <span class="co"># bp2 measured</span></span>
-<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(us07cx <span class="sc">==</span> <span class="dv">1</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>  <span class="co"># missing bp</span></span>
-<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(us07c1 <span class="sc">!=</span> <span class="dv">999</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(us07c2 <span class="sc">!=</span> <span class="dv">999</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>us07cx)</span>
-<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>bus_1 <span class="ot">&lt;-</span> </span>
-<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>  <span class="fu">inner_join</span>(bus1_1, bus1_2) <span class="sc">%&gt;%</span></span>
-<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>  <span class="co"># average of two bp measures (2nd and tird)</span></span>
-<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rowwise</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">us071 =</span> <span class="fu">mean</span>(<span class="fu">c</span>(us07b1, us07c1), <span class="at">na.rm =</span> <span class="cn">FALSE</span>),</span>
-<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>         <span class="at">us072 =</span> <span class="fu">mean</span>(<span class="fu">c</span>(us07b2, us07c2), <span class="at">na.rm =</span> <span class="cn">FALSE</span>)) <span class="sc">%&gt;%</span> </span>
-<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>us07b1, <span class="sc">-</span>us07c1, <span class="sc">-</span>us07b2, <span class="sc">-</span>us07c2) <span class="sc">%&gt;%</span> </span>
-<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>  <span class="co"># selecting hypertensive</span></span>
-<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(us071 <span class="sc">&gt;</span> <span class="dv">140</span> <span class="sc">|</span> us072 <span class="sc">&gt;</span> <span class="dv">90</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>us071, <span class="sc">-</span>us072) <span class="sc">%&gt;%</span></span>
-<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">sex =</span> us01,</span>
-<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>         <span class="at">age =</span> us03) <span class="sc">%&gt;%</span> </span>
-<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">age2 =</span> age<span class="sc">*</span>age) <span class="sc">%&gt;%</span> </span>
-<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a>  <span class="fu">relocate</span>(age2, <span class="at">.after =</span> age)</span>
-<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(bus1_1, bus1_2)</span></code></pre></div>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">frq</span>(bus_1, sex)</span></code></pre></div>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># only measured respondents</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(us00 <span class="sc">==</span> <span class="dv">1</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>us00) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="co"># missing sex</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(us01)) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  <span class="co"># recoding sex for regression</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">sex =</span> <span class="fu">ifelse</span>(us01 <span class="sc">==</span> <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">1</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>us01) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>  <span class="co"># implausible DOB</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">us02yr =</span> <span class="fu">if_else</span>(us02yr <span class="sc">&gt;=</span> <span class="dv">9998</span>, <span class="cn">NA_real_</span>, us02yr)) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>  <span class="co"># missing age</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(us03 <span class="sc">&lt;</span> <span class="dv">998</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>  <span class="co"># age inclusion</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(us03 <span class="sc">&gt;=</span> <span class="dv">45</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>  <span class="co"># bp1 measured</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(us07bx <span class="sc">==</span> <span class="dv">1</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>us07bx) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>  <span class="co"># missing bp</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(us07b1 <span class="sc">!=</span> <span class="dv">999</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(us07b2 <span class="sc">!=</span> <span class="dv">999</span>) </span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>bus1_2 <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">&quot;data-raw/IFLS4/hh07_all_dta/bus1_2.dta&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>  <span class="co"># zap_label() %&gt;% </span></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">zap_labels</span>() <span class="sc">%&gt;%</span> <span class="fu">zap_formats</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(hhid07, pid07,</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>         us07cx, us07c1, us07c2) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_all</span>(as.numeric) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>  <span class="co"># bp2 measured</span></span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(us07cx <span class="sc">==</span> <span class="dv">1</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>  <span class="co"># missing bp</span></span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(us07c1 <span class="sc">!=</span> <span class="dv">999</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(us07c2 <span class="sc">!=</span> <span class="dv">999</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>us07cx)</span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a>bus_1 <span class="ot">&lt;-</span> </span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>  <span class="fu">inner_join</span>(bus1_1, bus1_2) <span class="sc">%&gt;%</span></span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>  <span class="co"># average of two bp measures (2nd and 3rd)</span></span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rowwise</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">us071 =</span> <span class="fu">mean</span>(<span class="fu">c</span>(us07b1, us07c1), <span class="at">na.rm =</span> <span class="cn">FALSE</span>),</span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>         <span class="at">us072 =</span> <span class="fu">mean</span>(<span class="fu">c</span>(us07b2, us07c2), <span class="at">na.rm =</span> <span class="cn">FALSE</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>us07b1, <span class="sc">-</span>us07c1, <span class="sc">-</span>us07b2, <span class="sc">-</span>us07c2) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>  <span class="co"># selecting hypertensive</span></span>
+<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(us071 <span class="sc">&gt;</span> <span class="dv">140</span> <span class="sc">|</span> us072 <span class="sc">&gt;</span> <span class="dv">90</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>us071, <span class="sc">-</span>us072) <span class="sc">%&gt;%</span></span>
+<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a>  <span class="co"># misc</span></span>
+<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">age =</span> us03) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">age2 =</span> age<span class="sc">*</span>age) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a>  <span class="fu">relocate</span>(age2, <span class="at">.after =</span> age)</span></code></pre></div>
+<p>After this steps end up with 4,117 individuals in the dataset which
+is already diverging from the analysis dataset reported in the paper (N
+= 4209).</p>
+<p>The sex distribution seems to follow what is reported in the
+paper:</p>
 <pre><code>sex &lt;numeric&gt; 
-# total N=4117 valid N=4117 mean=2.17 sd=0.99
+# total N=4117 valid N=4117 mean=0.58 sd=0.49
 
 Value |    N | Raw % | Valid % | Cum. %
 ---------------------------------------
-    1 | 1717 | 41.71 |   41.71 |  41.71
-    3 | 2400 | 58.29 |   58.29 | 100.00
+    0 | 1717 | 41.71 |   41.71 |  41.71
+    1 | 2400 | 58.29 |   58.29 | 100.00
  &lt;NA&gt; |    0 |  0.00 |    &lt;NA&gt; |   &lt;NA&gt;</code></pre>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(bus_1<span class="sc">$</span>age)</span></code></pre></div>
-<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-  45.00   52.00   59.00   60.93   69.00  120.00 </code></pre>
 </div>
 <div id="hypertension-diagnosed" class="section level2">
 <h2>Hypertension diagnosed</h2>
-<p>From <code>b3b_cd3.dta</code> file.</p>
+<p>From <code>b3b_cd3.dta</code> file:</p>
 <p><code>cdtype</code> Type chronic conditions<br />
 A. Hypertension</p>
 <p><code>cd05</code> Has a doctor ever told you that you had<br />
 1. Yes</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>b3b_cd3  <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">&quot;data-raw/IFLS4/hh07_all_dta/b3b_cd3.dta&quot;</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># zap_label() %&gt;% </span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">zap_labels</span>() <span class="sc">%&gt;%</span> <span class="fu">zap_formats</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(pid07, hhid07,</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>         cd05, cdtype) <span class="sc">%&gt;%</span> </span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(cdtype <span class="sc">==</span> <span class="st">&quot;A&quot;</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>cdtype) <span class="sc">%&gt;%</span> </span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_all</span>(as.numeric) <span class="sc">%&gt;%</span> </span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="co"># excluding missing</span></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(cd05 <span class="sc">!=</span> <span class="dv">9</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># outcome is NO diagnosis</span></span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">cd05 =</span> <span class="fu">ifelse</span>(cd05 <span class="sc">==</span> <span class="dv">1</span>, <span class="dv">0</span>, cd05)) <span class="sc">%&gt;%</span> </span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">cd05 =</span> <span class="fu">ifelse</span>(cd05 <span class="sc">==</span> <span class="dv">3</span>, <span class="dv">1</span>, cd05)) <span class="sc">%&gt;%</span> </span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">underdiagnosed =</span> cd05)</span></code></pre></div>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">frq</span>(b3b_cd3, underdiagnosed)</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>b3b_cd3  <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">&quot;data-raw/IFLS4/hh07_all_dta/b3b_cd3.dta&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># zap_label() %&gt;% </span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">zap_labels</span>() <span class="sc">%&gt;%</span> <span class="fu">zap_formats</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(pid07, hhid07,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>         cd05, cdtype) <span class="sc">%&gt;%</span> </span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(cdtype <span class="sc">==</span> <span class="st">&quot;A&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>cdtype) <span class="sc">%&gt;%</span> </span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_all</span>(as.numeric) <span class="sc">%&gt;%</span> </span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="co"># excluding missing</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(cd05 <span class="sc">!=</span> <span class="dv">9</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># outcome is NO diagnosis</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">cd05 =</span> <span class="fu">ifelse</span>(cd05 <span class="sc">==</span> <span class="dv">1</span>, <span class="dv">0</span>, cd05)) <span class="sc">%&gt;%</span> </span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">cd05 =</span> <span class="fu">ifelse</span>(cd05 <span class="sc">==</span> <span class="dv">3</span>, <span class="dv">1</span>, cd05)) <span class="sc">%&gt;%</span> </span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">underdiagnosed =</span> cd05)</span></code></pre></div>
+<p>Proportion of under-diagnosed is higher but this is still dataset
+without link to the selection of patients made above:</p>
 <pre><code>underdiagnosed &lt;numeric&gt; 
 # total N=10816 valid N=10816 mean=0.81 sd=0.39
 
@@ -2040,28 +2054,56 @@ Value |    N | Raw % | Valid % | Cum. %
     0 | 2020 | 18.68 |   18.68 |  18.68
     1 | 8796 | 81.32 |   81.32 | 100.00
  &lt;NA&gt; |    0 |  0.00 |    &lt;NA&gt; |   &lt;NA&gt;</code></pre>
+<p>After the link the proportion is very similar to the one reported in
+paper but we have a significant amount of missing:</p>
+<pre><code>underdiagnosed &lt;numeric&gt; 
+# total N=4117 valid N=3755 mean=0.66 sd=0.47
+
+Value |    N | Raw % | Valid % | Cum. %
+---------------------------------------
+    0 | 1270 | 30.85 |   33.82 |  33.82
+    1 | 2485 | 60.36 |   66.18 | 100.00
+ &lt;NA&gt; |  362 |  8.79 |    &lt;NA&gt; |   &lt;NA&gt;</code></pre>
+<p>Selecting only under-diagnosed patients counts of sexes resemble
+these presented in paper:</p>
+<pre><code>sex &lt;numeric&gt; 
+# total N=2485 valid N=2485 mean=0.53 sd=0.50
+
+Value |    N | Raw % | Valid % | Cum. %
+---------------------------------------
+    0 | 1172 | 47.16 |   47.16 |  47.16
+    1 | 1313 | 52.84 |   52.84 | 100.00
+ &lt;NA&gt; |    0 |  0.00 |    &lt;NA&gt; |   &lt;NA&gt;</code></pre>
 </div>
 <div id="household-expenditures" class="section level2">
 <h2>Household expenditures</h2>
 <p>From <code>b1_ks2.dta</code> file.</p>
 <p><code>ks06</code> nonfood expenditure last month (Rp)</p>
 <p>Multiple types of expenditures are aggregated by household.</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>b1_ks2  <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">&quot;data-raw/IFLS4/hh07_all_dta/b1_ks2.dta&quot;</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># zap_label() %&gt;% </span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">zap_labels</span>() <span class="sc">%&gt;%</span> <span class="fu">zap_formats</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(hhid07,</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>         ks06) <span class="sc">%&gt;%</span> </span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_all</span>(as.numeric) <span class="sc">%&gt;%</span> </span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(hhid07) <span class="sc">%&gt;%</span> </span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">expenditures =</span> <span class="fu">sum</span>(ks06)) <span class="sc">%&gt;%</span> </span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>()</span></code></pre></div>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(b1_ks2<span class="sc">$</span>expenditures)</span></code></pre></div>
-<pre><code>      Min.    1st Qu.     Median       Mean    3rd Qu.       Max. 
-         0     121800     275000    3602037     608200 1199999988 </code></pre>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>b1_ks2  <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">&quot;data-raw/IFLS4/hh07_all_dta/b1_ks2.dta&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># zap_label() %&gt;% </span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">zap_labels</span>() <span class="sc">%&gt;%</span> <span class="fu">zap_formats</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(hhid07,</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>         ks06) <span class="sc">%&gt;%</span> </span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_all</span>(as.numeric) <span class="sc">%&gt;%</span> </span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(hhid07) <span class="sc">%&gt;%</span> </span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">expenditures =</span> <span class="fu">sum</span>(ks06)) <span class="sc">%&gt;%</span> </span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>()</span></code></pre></div>
+<p>We have few households where expenditures are missing. And also -
+where they are equal zero - the latter will create problems where log of
+this variable needed for regression is calculated:</p>
+<pre><code>expenditures == 0 &lt;lgl&gt; 
+# total N=4117 valid N=4114 mean=0.00 sd=0.06
+
+Value |    N | Raw % | Valid % | Cum. %
+---------------------------------------
+FALSE | 4098 | 99.54 |   99.61 |  99.61
+TRUE  |   16 |  0.39 |    0.39 | 100.00
+&lt;NA&gt;  |    3 |  0.07 |    &lt;NA&gt; |   &lt;NA&gt;</code></pre>
 </div>
 <div id="health-status" class="section level2">
 <h2>Health status</h2>
-<p>From <code>b3b_kk1.dta</code> file.</p>
+<p>From <code>b3b_kk1.dta</code> file:</p>
 <p><code>kk01</code> Generally how is your health?</p>
 <ol style="list-style-type: decimal">
 <li>Very healthy</li>
@@ -2069,23 +2111,24 @@ Value |    N | Raw % | Valid % | Cum. %
 <li>In poor health</li>
 <li>Very sick</li>
 </ol>
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>b3b_kk1  <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">&quot;data-raw/IFLS4/hh07_all_dta/b3b_kk1.dta&quot;</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># zap_label() %&gt;% </span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">zap_labels</span>() <span class="sc">%&gt;%</span> <span class="fu">zap_formats</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(pid07, hhid07,</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>         kk01) <span class="sc">%&gt;%</span> </span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_all</span>(as.numeric) <span class="sc">%&gt;%</span> </span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">poor_health =</span> <span class="fu">ifelse</span>(kk01 <span class="sc">&gt;=</span> <span class="dv">3</span>, <span class="dv">1</span>, <span class="dv">0</span>)) <span class="sc">%&gt;%</span> </span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>kk01)</span></code></pre></div>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">frq</span>(b3b_kk1, poor_health)</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>b3b_kk1  <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">&quot;data-raw/IFLS4/hh07_all_dta/b3b_kk1.dta&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># zap_label() %&gt;% </span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">zap_labels</span>() <span class="sc">%&gt;%</span> <span class="fu">zap_formats</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(pid07, hhid07,</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>         kk01) <span class="sc">%&gt;%</span> </span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_all</span>(as.numeric) <span class="sc">%&gt;%</span> </span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">poor_health =</span> <span class="fu">ifelse</span>(kk01 <span class="sc">&gt;=</span> <span class="dv">3</span>, <span class="dv">1</span>, <span class="dv">0</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>kk01)</span></code></pre></div>
+<p>There is a poor link between this dataset and the <code>bus_1</code>
+file which results in large amount of missings:</p>
 <pre><code>poor_health &lt;numeric&gt; 
-# total N=29032 valid N=29032 mean=0.14 sd=0.35
+# total N=4117 valid N=3755 mean=0.25 sd=0.43
 
-Value |     N | Raw % | Valid % | Cum. %
-----------------------------------------
-    0 | 24938 | 85.90 |   85.90 |  85.90
-    1 |  4094 | 14.10 |   14.10 | 100.00
- &lt;NA&gt; |     0 |  0.00 |    &lt;NA&gt; |   &lt;NA&gt;</code></pre>
+Value |    N | Raw % | Valid % | Cum. %
+---------------------------------------
+    0 | 2833 | 68.81 |   75.45 |  75.45
+    1 |  922 | 22.39 |   24.55 | 100.00
+ &lt;NA&gt; |  362 |  8.79 |    &lt;NA&gt; |   &lt;NA&gt;</code></pre>
 </div>
 <div id="distance-to-health-facilities" class="section level2">
 <h2>Distance to Health facilities</h2>
@@ -2094,33 +2137,46 @@ Value |     N | Raw % | Valid % | Cum. %
 <p>the distance from the closest health center (to proxy for the ease of
 access to medical care)</p>
 </blockquote>
+<p>The closest variables that would match this description are found in
+the <code>b1_pp.dta</code> dataset:</p>
 <p><code>pp5</code> One way travel time (unit of measurement)</p>
 <p><code>pptype</code> Type of out-patient facility<br />
 C. Public Health Center/Auxiliary Center</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>b1_pp  <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">&quot;data-raw/IFLS4/hh07_all_dta/b1_pp.dta&quot;</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># zap_label() %&gt;% </span></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">zap_labels</span>() <span class="sc">%&gt;%</span> <span class="fu">zap_formats</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(hhid07_9,</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>         pptype,</span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>         pp5, pp5x) <span class="sc">%&gt;%</span> </span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># facility type</span></span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(pptype <span class="sc">==</span> <span class="st">&quot;C&quot;</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>pptype) <span class="sc">%&gt;%</span> </span>
-<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_all</span>(as.numeric) <span class="sc">%&gt;%</span> </span>
-<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># exclude missings</span></span>
-<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(pp5x <span class="sc">&lt;</span> <span class="dv">30</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>  <span class="co"># standardize other units to minutes</span></span>
-<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">pp5 =</span> <span class="fu">ifelse</span>(pp5x <span class="sc">==</span> <span class="dv">2</span>, pp5<span class="sc">*</span><span class="dv">60</span>, pp5)) <span class="sc">%&gt;%</span> </span>
-<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">pp5 =</span> <span class="fu">ifelse</span>(pp5x <span class="sc">==</span> <span class="dv">3</span>, pp5<span class="sc">*</span><span class="dv">24</span><span class="sc">*</span><span class="dv">60</span>, pp5)) <span class="sc">%&gt;%</span> </span>
-<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>pp5x) <span class="sc">%&gt;%</span> </span>
-<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">travel_time =</span> pp5)</span></code></pre></div>
-<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(b1_pp<span class="sc">$</span>travel_time)</span></code></pre></div>
+<p>(Note: it’s important to take into account <code>pp5x</code> unit of
+measurement to make them comparable).</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>b1_pp  <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">&quot;data-raw/IFLS4/hh07_all_dta/b1_pp.dta&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># zap_label() %&gt;% </span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">zap_labels</span>() <span class="sc">%&gt;%</span> <span class="fu">zap_formats</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(hhid07_9,</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>         pptype,</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>         pp5, pp5x) <span class="sc">%&gt;%</span> </span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># facility type</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(pptype <span class="sc">==</span> <span class="st">&quot;C&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>pptype) <span class="sc">%&gt;%</span> </span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_all</span>(as.numeric) <span class="sc">%&gt;%</span> </span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># exclude missings</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(pp5x <span class="sc">&lt;</span> <span class="dv">30</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  <span class="co"># standardize other units to minutes</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">pp5 =</span> <span class="fu">ifelse</span>(pp5x <span class="sc">==</span> <span class="dv">2</span>, pp5<span class="sc">*</span><span class="dv">60</span>, pp5)) <span class="sc">%&gt;%</span> </span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">pp5 =</span> <span class="fu">ifelse</span>(pp5x <span class="sc">==</span> <span class="dv">3</span>, pp5<span class="sc">*</span><span class="dv">24</span><span class="sc">*</span><span class="dv">60</span>, pp5)) <span class="sc">%&gt;%</span> </span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>pp5x) <span class="sc">%&gt;%</span> </span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">travel_time =</span> pp5)</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(b1_pp<span class="sc">$</span>travel_time)</span></code></pre></div>
 <pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
    1.00    5.00   10.00   17.83   15.00 2880.00 </code></pre>
+<p>Once again, we have some missing information here:</p>
+<pre><code>is.na(travel_time) &lt;lgl&gt; 
+# total N=4117 valid N=4117 mean=0.09 sd=0.28
+
+Value |    N | Raw % | Valid % | Cum. %
+---------------------------------------
+FALSE | 3750 | 91.09 |   91.09 |  91.09
+TRUE  |  367 |  8.91 |    8.91 | 100.00
+&lt;NA&gt;  |    0 |  0.00 |    &lt;NA&gt; |   &lt;NA&gt;</code></pre>
 </div>
 <div id="education" class="section level2">
 <h2>Education</h2>
-<p>Paper defines it as:</p>
+<p>Paper defines it laconically as:</p>
 <blockquote>
 <p>measured in years of formal education</p>
 </blockquote>
@@ -2130,23 +2186,25 @@ C. Public Health Center/Auxiliary Center</p>
 <p><code>dl06</code> Highest level of education attended</p>
 <p><code>dl07byr</code> Year graduated or left school</p>
 <p><code>dl07d</code> IVWR NOTE: Still in school 1. Yes</p>
-<p>These together with <code>dob</code> can be used to obtain crude
-years of education.</p>
-<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>b3a_dl1 <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">&quot;data-raw/IFLS4/hh07_all_dta/b3a_dl1.dta&quot;</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># zap_label() %&gt;% </span></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">zap_labels</span>() <span class="sc">%&gt;%</span> <span class="fu">zap_formats</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(pid07, hhid07,</span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>         dl04,</span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>         dl06,</span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>         dl07d, </span>
-<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>         dl05a, dl07byr) <span class="sc">%&gt;%</span> </span>
-<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_all</span>(as.numeric) <span class="sc">%&gt;%</span> </span>
-<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>  <span class="co"># if still in school replace to 2007, year of survey</span></span>
-<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">dl07byr =</span> <span class="fu">ifelse</span> (<span class="fu">is.na</span>(dl07byr) <span class="sc">&amp;</span> dl07d <span class="sc">==</span> <span class="dv">1</span>, <span class="dv">2007</span>, dl07byr)) <span class="sc">%&gt;%</span> </span>
-<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>  <span class="co"># missings</span></span>
-<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(dl07byr <span class="sc">&lt;</span> <span class="dv">9998</span> <span class="sc">|</span> <span class="fu">is.na</span>(dl07byr)) <span class="sc">%&gt;%</span></span>
-<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(dl05a <span class="sc">&lt;</span> <span class="dv">98</span> <span class="sc">|</span> <span class="fu">is.na</span>(dl07byr)) <span class="sc">%&gt;%</span> </span>
-<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>dl07d)</span></code></pre></div>
+<p>These together with <code>dob</code> these variables can be used to
+obtain crude years of education.</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>b3a_dl1 <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">&quot;data-raw/IFLS4/hh07_all_dta/b3a_dl1.dta&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># zap_label() %&gt;% </span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">zap_labels</span>() <span class="sc">%&gt;%</span> <span class="fu">zap_formats</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(pid07, hhid07,</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>         dl04,</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>         dl06,</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>         dl07d, </span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>         dl05a, dl07byr) <span class="sc">%&gt;%</span> </span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_all</span>(as.numeric) <span class="sc">%&gt;%</span> </span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>  <span class="co"># if still in school replace to 2007, year of survey</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">dl07byr =</span> <span class="fu">ifelse</span> (<span class="fu">is.na</span>(dl07byr) <span class="sc">&amp;</span> dl07d <span class="sc">==</span> <span class="dv">1</span>, <span class="dv">2007</span>, dl07byr)) <span class="sc">%&gt;%</span> </span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>  <span class="co"># missings</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(dl07byr <span class="sc">&lt;</span> <span class="dv">9998</span> <span class="sc">|</span> <span class="fu">is.na</span>(dl07byr)) <span class="sc">%&gt;%</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(dl05a <span class="sc">&lt;</span> <span class="dv">98</span> <span class="sc">|</span> <span class="fu">is.na</span>(dl07byr)) <span class="sc">%&gt;%</span> </span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>dl07d)</span></code></pre></div>
+<p>Of course - this is only possible for patients that have these
+variables non missing which seems to be quite a large problem:</p>
 </div>
 <div id="risk-time-preference" class="section level2">
 <h2>Risk &amp; time preference</h2>
@@ -2156,13 +2214,169 @@ group respondents in four distinct groups from the most patient to the
 most impatient, respectively from the least risk averse to the most risk
 averse.</p>
 </blockquote>
-<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># b3a_si &lt;- read_dta(&quot;data-raw/IFLS4/hh07_all_dta/b3a_si.dta&quot;) %&gt;% </span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="co">#   select(pid07, hhid07,</span></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="co">#          ) </span></span></code></pre></div>
-<p>TBD..</p>
+<p>Paper of Ng defines two measures of risk and two measures of time and
+does not specify which of them were used and in which form (one vs. the
+other? combined?).</p>
+<p>Here we prepare all 4 measures (2 for risk and two for time).</p>
+<p>Method of Ng basically takes into accoutn answers to five questions
+and follows a flowchart to assign the individual to a risk category
+ranging from 0 to 4.</p>
+<p>From the dataset <code>b3a_si.dta</code> we can use variables:</p>
+<p><code>si01</code> Which money earning option choosen?
+<code>si02</code> Are you sure? <code>si03</code> Which option will you
+choose? <code>si04</code> Which option will you choose?
+<code>si05</code> Which option will you choose?</p>
+<p>to construct risk measure 1.</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>risk1 <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">&quot;data-raw/IFLS4/hh07_all_dta/b3a_si.dta&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># zap_label() %&gt;% </span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">zap_labels</span>() <span class="sc">%&gt;%</span> <span class="fu">zap_formats</span>() <span class="sc">%&gt;%</span>  </span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>version, <span class="sc">-</span>module, <span class="sc">-</span>pidlink) <span class="sc">%&gt;%</span> </span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_all</span>(as.numeric) <span class="sc">%&gt;%</span> </span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">relocate</span>(hhid07, <span class="at">.after =</span> pid07) <span class="sc">%&gt;%</span> </span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(si01 <span class="sc">&lt;</span> <span class="dv">8</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(si02 <span class="sc">&lt;</span> <span class="dv">8</span> <span class="sc">|</span> <span class="fu">is.na</span>(si02)) <span class="sc">%&gt;%</span> </span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(si03 <span class="sc">&lt;</span> <span class="dv">8</span> <span class="sc">|</span> <span class="fu">is.na</span>(si03)) <span class="sc">%&gt;%</span> </span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(si04 <span class="sc">&lt;</span> <span class="dv">8</span> <span class="sc">|</span> <span class="fu">is.na</span>(si04)) <span class="sc">%&gt;%</span> </span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(si05 <span class="sc">&lt;</span> <span class="dv">8</span> <span class="sc">|</span> <span class="fu">is.na</span>(si05)) <span class="sc">%&gt;%</span> </span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">risk1 =</span> <span class="fu">case_when</span>(</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>      si01 <span class="sc">==</span> <span class="dv">1</span> <span class="sc">&amp;</span> si02 <span class="sc">==</span> <span class="dv">1</span>    <span class="sc">~</span> <span class="dv">0</span>,</span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>      si03 <span class="sc">==</span> <span class="dv">2</span> <span class="sc">&amp;</span> si05 <span class="sc">==</span> <span class="dv">2</span>    <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>      si03 <span class="sc">==</span> <span class="dv">2</span> <span class="sc">&amp;</span> si05 <span class="sc">==</span> <span class="dv">1</span>    <span class="sc">~</span> <span class="dv">2</span>,</span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>      si03 <span class="sc">==</span> <span class="dv">1</span> <span class="sc">&amp;</span> si04 <span class="sc">==</span> <span class="dv">2</span>    <span class="sc">~</span> <span class="dv">3</span>,</span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>      si03 <span class="sc">==</span> <span class="dv">1</span> <span class="sc">&amp;</span> si04 <span class="sc">==</span> <span class="dv">1</span>    <span class="sc">~</span> <span class="dv">4</span></span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(pid07, hhid07, risk1)</span></code></pre></div>
+<p>Then in a similar vein variables <code>si11</code> to
+<code>si15</code> can be used to construct risk measure 2.</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>risk2 <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">&quot;data-raw/IFLS4/hh07_all_dta/b3a_si.dta&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># zap_label() %&gt;% </span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">zap_labels</span>() <span class="sc">%&gt;%</span> <span class="fu">zap_formats</span>() <span class="sc">%&gt;%</span>  </span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>version, <span class="sc">-</span>module, <span class="sc">-</span>pidlink) <span class="sc">%&gt;%</span> </span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_all</span>(as.numeric) <span class="sc">%&gt;%</span> </span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">relocate</span>(hhid07, <span class="at">.after =</span> pid07) <span class="sc">%&gt;%</span> </span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(si11 <span class="sc">&lt;</span> <span class="dv">8</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(si12 <span class="sc">&lt;</span> <span class="dv">8</span> <span class="sc">|</span> <span class="fu">is.na</span>(si12)) <span class="sc">%&gt;%</span> </span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(si13 <span class="sc">&lt;</span> <span class="dv">8</span> <span class="sc">|</span> <span class="fu">is.na</span>(si13)) <span class="sc">%&gt;%</span> </span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(si14 <span class="sc">&lt;</span> <span class="dv">8</span> <span class="sc">|</span> <span class="fu">is.na</span>(si14)) <span class="sc">%&gt;%</span> </span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(si15 <span class="sc">&lt;</span> <span class="dv">8</span> <span class="sc">|</span> <span class="fu">is.na</span>(si15)) <span class="sc">%&gt;%</span> </span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">risk2 =</span> <span class="fu">case_when</span>(</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>      si11 <span class="sc">==</span> <span class="dv">1</span> <span class="sc">&amp;</span> si12 <span class="sc">==</span> <span class="dv">1</span>    <span class="sc">~</span> <span class="dv">0</span>,</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>      si13 <span class="sc">==</span> <span class="dv">2</span> <span class="sc">&amp;</span> si15 <span class="sc">==</span> <span class="dv">2</span>    <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>      si13 <span class="sc">==</span> <span class="dv">2</span> <span class="sc">&amp;</span> si15 <span class="sc">==</span> <span class="dv">1</span>    <span class="sc">~</span> <span class="dv">2</span>,</span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>      si13 <span class="sc">==</span> <span class="dv">1</span> <span class="sc">&amp;</span> si14 <span class="sc">==</span> <span class="dv">2</span>    <span class="sc">~</span> <span class="dv">3</span>,</span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>      si13 <span class="sc">==</span> <span class="dv">1</span> <span class="sc">&amp;</span> si14 <span class="sc">==</span> <span class="dv">1</span>    <span class="sc">~</span> <span class="dv">4</span></span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(pid07, hhid07, risk2)</span></code></pre></div>
+<pre><code>risk1 &lt;numeric&gt; 
+# total N=4117 valid N=3670 mean=1.49 sd=1.72
+
+Value |    N | Raw % | Valid % | Cum. %
+---------------------------------------
+    0 | 1778 | 43.19 |   48.45 |  48.45
+    1 |  496 | 12.05 |   13.51 |  61.96
+    2 |  221 |  5.37 |    6.02 |  67.98
+    3 |  154 |  3.74 |    4.20 |  72.18
+    4 | 1021 | 24.80 |   27.82 | 100.00
+ &lt;NA&gt; |  447 | 10.86 |    &lt;NA&gt; |   &lt;NA&gt;
+
+risk2 &lt;numeric&gt; 
+# total N=4117 valid N=3360 mean=3.76 sd=0.71
+
+Value |    N | Raw % | Valid % | Cum. %
+---------------------------------------
+    1 |  155 |  3.76 |    4.61 |   4.61
+    2 |   71 |  1.72 |    2.11 |   6.73
+    3 |  190 |  4.62 |    5.65 |  12.38
+    4 | 2944 | 71.51 |   87.62 | 100.00
+ &lt;NA&gt; |  757 | 18.39 |    &lt;NA&gt; |   &lt;NA&gt;</code></pre>
+<p>Combining two risk scores into one we can impute missing values of
+first measure with non-missing ones from two:</p>
+<pre><code>is.na(risk1) &amp; !is.na(risk2) &lt;lgl&gt; 
+# total N=4117 valid N=4117 mean=0.01 sd=0.07
+
+Value |    N | Raw % | Valid % | Cum. %
+---------------------------------------
+FALSE | 4096 | 99.49 |   99.49 |  99.49
+TRUE  |   21 |  0.51 |    0.51 | 100.00
+&lt;NA&gt;  |    0 |  0.00 |    &lt;NA&gt; |   &lt;NA&gt;</code></pre>
+<p>In a very similar procedure variables <code>si21a</code> to
+<code>si21d</code> and <code>si22a</code> and <code>si22d</code> can be
+used to derive time preference 1 and 2 respectively.</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>time1 <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">&quot;data-raw/IFLS4/hh07_all_dta/b3a_si.dta&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># zap_label() %&gt;% </span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">zap_labels</span>() <span class="sc">%&gt;%</span> <span class="fu">zap_formats</span>() <span class="sc">%&gt;%</span>  </span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>version, <span class="sc">-</span>module, <span class="sc">-</span>pidlink) <span class="sc">%&gt;%</span> </span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_all</span>(as.numeric) <span class="sc">%&gt;%</span> </span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">relocate</span>(hhid07, <span class="at">.after =</span> pid07) <span class="sc">%&gt;%</span> </span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(si21a <span class="sc">&lt;</span> <span class="dv">8</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(si21b <span class="sc">&lt;</span> <span class="dv">8</span> <span class="sc">|</span> <span class="fu">is.na</span>(si21b)) <span class="sc">%&gt;%</span> </span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(si21c <span class="sc">&lt;</span> <span class="dv">8</span> <span class="sc">|</span> <span class="fu">is.na</span>(si21c)) <span class="sc">%&gt;%</span> </span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(si21d <span class="sc">&lt;</span> <span class="dv">8</span> <span class="sc">|</span> <span class="fu">is.na</span>(si21d)) <span class="sc">%&gt;%</span> </span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(si21e <span class="sc">&lt;</span> <span class="dv">8</span> <span class="sc">|</span> <span class="fu">is.na</span>(si21e)) <span class="sc">%&gt;%</span> </span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">time1 =</span> <span class="fu">case_when</span>(</span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>      si21a <span class="sc">==</span> <span class="dv">2</span>                 <span class="sc">~</span> <span class="dv">0</span>,</span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>      si21b <span class="sc">==</span> <span class="dv">2</span> <span class="sc">&amp;</span> si21d <span class="sc">==</span> <span class="dv">2</span>    <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>      si21b <span class="sc">==</span> <span class="dv">2</span> <span class="sc">&amp;</span> si21d <span class="sc">==</span> <span class="dv">1</span>    <span class="sc">~</span> <span class="dv">2</span>,</span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>      si21b <span class="sc">==</span> <span class="dv">1</span> <span class="sc">&amp;</span> si21c <span class="sc">==</span> <span class="dv">2</span>    <span class="sc">~</span> <span class="dv">3</span>,</span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>      si21b <span class="sc">==</span> <span class="dv">1</span> <span class="sc">&amp;</span> si21c <span class="sc">==</span> <span class="dv">1</span>    <span class="sc">~</span> <span class="dv">4</span></span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(pid07, hhid07, time1)</span></code></pre></div>
+<p>Then again in a similar vein variables <code>si22a</code> to
+<code>si22e</code> can be used to construct risk measure 2.</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>time2 <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">&quot;data-raw/IFLS4/hh07_all_dta/b3a_si.dta&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># zap_label() %&gt;% </span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">zap_labels</span>() <span class="sc">%&gt;%</span> <span class="fu">zap_formats</span>() <span class="sc">%&gt;%</span>  </span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>version, <span class="sc">-</span>module, <span class="sc">-</span>pidlink) <span class="sc">%&gt;%</span> </span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_all</span>(as.numeric) <span class="sc">%&gt;%</span> </span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">relocate</span>(hhid07, <span class="at">.after =</span> pid07) <span class="sc">%&gt;%</span> </span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(si22a <span class="sc">&lt;</span> <span class="dv">8</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(si22b <span class="sc">&lt;</span> <span class="dv">8</span> <span class="sc">|</span> <span class="fu">is.na</span>(si22b)) <span class="sc">%&gt;%</span> </span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(si22c <span class="sc">&lt;</span> <span class="dv">8</span> <span class="sc">|</span> <span class="fu">is.na</span>(si22c)) <span class="sc">%&gt;%</span> </span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(si22d <span class="sc">&lt;</span> <span class="dv">8</span> <span class="sc">|</span> <span class="fu">is.na</span>(si22d)) <span class="sc">%&gt;%</span> </span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(si22e <span class="sc">&lt;</span> <span class="dv">8</span> <span class="sc">|</span> <span class="fu">is.na</span>(si22e)) <span class="sc">%&gt;%</span> </span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">time2 =</span> <span class="fu">case_when</span>(</span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>      si22a <span class="sc">==</span> <span class="dv">2</span>                 <span class="sc">~</span> <span class="dv">0</span>,</span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>      si22b <span class="sc">==</span> <span class="dv">2</span> <span class="sc">&amp;</span> si22d <span class="sc">==</span> <span class="dv">1</span>    <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>      si22b <span class="sc">==</span> <span class="dv">2</span> <span class="sc">&amp;</span> si22d <span class="sc">==</span> <span class="dv">2</span>    <span class="sc">~</span> <span class="dv">2</span>,</span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>      si22b <span class="sc">==</span> <span class="dv">1</span> <span class="sc">&amp;</span> si22c <span class="sc">==</span> <span class="dv">2</span>    <span class="sc">~</span> <span class="dv">3</span>,</span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>      si22b <span class="sc">==</span> <span class="dv">1</span> <span class="sc">&amp;</span> si22c <span class="sc">==</span> <span class="dv">1</span>    <span class="sc">~</span> <span class="dv">4</span></span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(pid07, hhid07, time2)</span></code></pre></div>
+<pre><code>time1 &lt;numeric&gt; 
+# total N=4117 valid N=3752 mean=3.54 sd=0.97
+
+Value |    N | Raw % | Valid % | Cum. %
+---------------------------------------
+    0 |   64 |  1.55 |    1.71 |   1.71
+    1 |  253 |  6.15 |    6.74 |   8.45
+    2 |  152 |  3.69 |    4.05 |  12.50
+    3 |  394 |  9.57 |   10.50 |  23.00
+    4 | 2889 | 70.17 |   77.00 | 100.00
+ &lt;NA&gt; |  365 |  8.87 |    &lt;NA&gt; |   &lt;NA&gt;
+
+time2 &lt;numeric&gt; 
+# total N=4117 valid N=3752 mean=3.75 sd=0.71
+
+Value |    N | Raw % | Valid % | Cum. %
+---------------------------------------
+    0 |   32 |  0.78 |    0.85 |   0.85
+    1 |  115 |  2.79 |    3.07 |   3.92
+    2 |   73 |  1.77 |    1.95 |   5.86
+    3 |  305 |  7.41 |    8.13 |  13.99
+    4 | 3227 | 78.38 |   86.01 | 100.00
+ &lt;NA&gt; |  365 |  8.87 |    &lt;NA&gt; |   &lt;NA&gt;</code></pre>
 </div>
 <div id="disease-management" class="section level2">
 <h2>Disease management</h2>
+<p>Information about this variable from the paper:</p>
 <blockquote>
 <p>We construct a dummy variable that is equal to 1 if respondents
 checked their blood pressure at least once in the month preceding the
@@ -2176,56 +2390,56 @@ were previously diagnosed with hypertension.</p>
 <p>From <code>b3b_rj3.dta</code> file we can grab:</p>
 <p><code>rj24amth</code> Last blood pressure check (month)<br />
 <code>rj24ayr</code> Last blood pressure check (year)</p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>b3b_rj3 <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">&quot;data-raw/IFLS4/hh07_all_dta/b3b_rj3.dta&quot;</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># zap_label() %&gt;% </span></span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">zap_labels</span>() <span class="sc">%&gt;%</span> <span class="fu">zap_formats</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(pid07, hhid07_9,</span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>         rj24amth, rj24ayr) <span class="sc">%&gt;%</span> </span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_all</span>(as.numeric) <span class="sc">%&gt;%</span> </span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># missings</span></span>
-<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(rj24amth)) <span class="sc">%&gt;%</span> </span>
-<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(rj24ayr)) <span class="sc">%&gt;%</span> </span>
-<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(rj24amth <span class="sc">&lt;</span> <span class="dv">98</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(rj24ayr <span class="sc">&lt;</span> <span class="dv">9998</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">bp_date =</span> <span class="fu">ymd</span>(<span class="fu">paste</span>(rj24ayr, rj24amth, <span class="dv">1</span>, <span class="at">sep=</span> <span class="st">&quot; &quot;</span>))) </span></code></pre></div>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>b3b_rj3 <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">&quot;data-raw/IFLS4/hh07_all_dta/b3b_rj3.dta&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># zap_label() %&gt;% </span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">zap_labels</span>() <span class="sc">%&gt;%</span> <span class="fu">zap_formats</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(pid07, hhid07_9,</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>         rj24amth, rj24ayr) <span class="sc">%&gt;%</span> </span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_all</span>(as.numeric) <span class="sc">%&gt;%</span> </span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># missings</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(rj24amth)) <span class="sc">%&gt;%</span> </span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(rj24ayr)) <span class="sc">%&gt;%</span> </span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(rj24amth <span class="sc">&lt;</span> <span class="dv">98</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(rj24ayr <span class="sc">&lt;</span> <span class="dv">9998</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">bp_date =</span> <span class="fu">ymd</span>(<span class="fu">paste</span>(rj24ayr, rj24amth, <span class="dv">1</span>, <span class="at">sep=</span> <span class="st">&quot; &quot;</span>))) </span></code></pre></div>
 <p>From the file <code>b1_cov.dta</code> we can grab:</p>
 <p><code>ivwday1</code> Date of intrvw (day of month)(1)
 <code>ivwmth1</code> Date of interview (month)(1) <code>ivwyr1</code>
 Date of Visit (year)(1)</p>
-<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>b1_cov <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">&quot;data-raw/IFLS4/hh07_all_dta/b1_cov.dta&quot;</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># zap_label() %&gt;% </span></span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">zap_labels</span>() <span class="sc">%&gt;%</span> <span class="fu">zap_formats</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(pid07, hhid07_9,</span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>         <span class="co"># ivwday1, # fixing 1st to correctly get differences</span></span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>         ivwmth1, ivwyr1) <span class="sc">%&gt;%</span> </span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_all</span>(as.numeric) <span class="sc">%&gt;%</span> </span>
-<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(ivwmth1)) <span class="sc">%&gt;%</span> </span>
-<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(ivwyr1)) <span class="sc">%&gt;%</span> </span>
-<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">ivwyr1 =</span> ivwyr1 <span class="sc">+</span> <span class="dv">2000</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">iv_date =</span> <span class="fu">ymd</span>(<span class="fu">paste</span>(ivwyr1, ivwmth1, <span class="dv">1</span>, <span class="at">sep=</span> <span class="st">&quot; &quot;</span>))) </span></code></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>b1_cov <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">&quot;data-raw/IFLS4/hh07_all_dta/b1_cov.dta&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># zap_label() %&gt;% </span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">zap_labels</span>() <span class="sc">%&gt;%</span> <span class="fu">zap_formats</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(pid07, hhid07_9,</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>         <span class="co"># ivwday1, # fixing 1st to correctly get differences</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>         ivwmth1, ivwyr1) <span class="sc">%&gt;%</span> </span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_all</span>(as.numeric) <span class="sc">%&gt;%</span> </span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(ivwmth1)) <span class="sc">%&gt;%</span> </span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(ivwyr1)) <span class="sc">%&gt;%</span> </span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">ivwyr1 =</span> ivwyr1 <span class="sc">+</span> <span class="dv">2000</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">iv_date =</span> <span class="fu">ymd</span>(<span class="fu">paste</span>(ivwyr1, ivwmth1, <span class="dv">1</span>, <span class="at">sep=</span> <span class="st">&quot; &quot;</span>))) </span></code></pre></div>
 <p>These dates can be then compared to generate an indicator of
 measurement in the month proceeding the interview.</p>
 <p>Note: values of BP measurement that are dated <strong>after</strong>
 date of interview are considered implausible and do not count towards
 the positive indicator.</p>
-<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>b3b_rj3 <span class="sc">%&lt;&gt;%</span> <span class="fu">inner_join</span>(b1_cov) <span class="sc">%&gt;%</span> </span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">bp_dist =</span> <span class="fu">as.numeric</span>(iv_date <span class="sc">-</span> bp_date)) <span class="sc">%&gt;%</span> </span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">bp_month =</span> <span class="fu">if_else</span>(bp_dist <span class="sc">&gt;</span> <span class="dv">0</span> <span class="sc">&amp;</span> bp_dist <span class="sc">&lt;=</span> <span class="dv">31</span>, <span class="dv">1</span>, <span class="dv">0</span>)) <span class="sc">%&gt;%</span> </span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>ivwyr1, <span class="sc">-</span>ivwmth1,</span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>         <span class="sc">-</span> rj24ayr, <span class="sc">-</span>rj24amth,</span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>         <span class="sc">-</span>iv_date, <span class="sc">-</span>bp_date,</span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>         <span class="sc">-</span>bp_dist)</span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(b1_cov)</span></code></pre></div>
-<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">frq</span>(b3b_rj3, bp_month)</span></code></pre></div>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>b3b_rj3 <span class="sc">%&lt;&gt;%</span> <span class="fu">inner_join</span>(b1_cov) <span class="sc">%&gt;%</span> </span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">bp_dist =</span> <span class="fu">as.numeric</span>(iv_date <span class="sc">-</span> bp_date)) <span class="sc">%&gt;%</span> </span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">bp_month =</span> <span class="fu">if_else</span>(bp_dist <span class="sc">&gt;</span> <span class="dv">0</span> <span class="sc">&amp;</span> bp_dist <span class="sc">&lt;=</span> <span class="dv">31</span>, <span class="dv">1</span>, <span class="dv">0</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>ivwyr1, <span class="sc">-</span>ivwmth1,</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>         <span class="sc">-</span> rj24ayr, <span class="sc">-</span>rj24amth,</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>         <span class="sc">-</span>iv_date, <span class="sc">-</span>bp_date,</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>         <span class="sc">-</span>bp_dist)</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(b1_cov)</span></code></pre></div>
+<p>There is a very big amount of information missing here:</p>
 <pre><code>bp_month &lt;numeric&gt; 
-# total N=7757 valid N=7757 mean=0.30 sd=0.46
+# total N=4117 valid N=1053 mean=0.31 sd=0.46
 
 Value |    N | Raw % | Valid % | Cum. %
 ---------------------------------------
-    0 | 5460 | 70.39 |   70.39 |  70.39
-    1 | 2297 | 29.61 |   29.61 | 100.00
- &lt;NA&gt; |    0 |  0.00 |    &lt;NA&gt; |   &lt;NA&gt;</code></pre>
+    0 |  722 | 17.54 |   68.57 |  68.57
+    1 |  331 |  8.04 |   31.43 | 100.00
+ &lt;NA&gt; | 3064 | 74.42 |    &lt;NA&gt; |   &lt;NA&gt;</code></pre>
 </div>
 </div>
 <div id="final-dataset" class="section level1">
@@ -2238,103 +2452,130 @@ was used to impute values into simple four categories of ‘elementary’,
 ‘junior high’, ‘senior high’ and ‘university’.</p>
 <p>Similarly, large amount of missings in the disease management
 indicator was assumed to mean ‘no’.</p>
-<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> bus_1 <span class="sc">%&gt;%</span> </span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># hyper diagnosis</span></span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(b3b_cd3) <span class="sc">%&gt;%</span> </span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># exclude missings</span></span>
-<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(underdiagnosed)) <span class="sc">%&gt;%</span> </span>
-<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># expenditures</span></span>
-<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(b1_ks2) <span class="sc">%&gt;%</span> </span>
-<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>  <span class="co"># exclude missings</span></span>
-<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(expenditures)) <span class="sc">%&gt;%</span> </span>
-<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>  <span class="co"># avoid 0s for log</span></span>
-<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">expenditures =</span> <span class="fu">if_else</span>(expenditures <span class="sc">==</span> <span class="dv">0</span>, <span class="dv">1</span>, expenditures)) <span class="sc">%&gt;%</span> </span>
-<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>  <span class="co"># log</span></span>
-<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">expenditures_log =</span> <span class="fu">log</span>(expenditures)) <span class="sc">%&gt;%</span> </span>
-<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>expenditures) <span class="sc">%&gt;%</span> </span>
-<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>  <span class="co"># bad health</span></span>
-<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(b3b_kk1) <span class="sc">%&gt;%</span> </span>
-<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a>  <span class="co"># exclude missings</span></span>
-<span id="cb25-21"><a href="#cb25-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(poor_health)) <span class="sc">%&gt;%</span>  </span>
-<span id="cb25-22"><a href="#cb25-22" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb25-23"><a href="#cb25-23" aria-hidden="true" tabindex="-1"></a>  <span class="co"># distance</span></span>
-<span id="cb25-24"><a href="#cb25-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(b1_pp) <span class="sc">%&gt;%</span> </span>
-<span id="cb25-25"><a href="#cb25-25" aria-hidden="true" tabindex="-1"></a>  <span class="co"># exclude missings</span></span>
-<span id="cb25-26"><a href="#cb25-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(travel_time)) <span class="sc">%&gt;%</span> </span>
-<span id="cb25-27"><a href="#cb25-27" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb25-28"><a href="#cb25-28" aria-hidden="true" tabindex="-1"></a>  <span class="co"># education</span></span>
-<span id="cb25-29"><a href="#cb25-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(b3a_dl1) <span class="sc">%&gt;%</span> </span>
-<span id="cb25-30"><a href="#cb25-30" aria-hidden="true" tabindex="-1"></a>  <span class="co"># calculate years of education</span></span>
-<span id="cb25-31"><a href="#cb25-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">education =</span> dl07byr <span class="sc">-</span> us02yr <span class="sc">-</span> dl05a) <span class="sc">%&gt;%</span> </span>
-<span id="cb25-32"><a href="#cb25-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>dl07byr, <span class="sc">-</span>us02yr, <span class="sc">-</span>dl05a) <span class="sc">%&gt;%</span> </span>
-<span id="cb25-33"><a href="#cb25-33" aria-hidden="true" tabindex="-1"></a>  <span class="co"># zero for those who never attended</span></span>
-<span id="cb25-34"><a href="#cb25-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">education =</span> <span class="fu">if_else</span>(dl04 <span class="sc">==</span> <span class="dv">3</span>, <span class="dv">0</span>, education)) <span class="sc">%&gt;%</span> </span>
-<span id="cb25-35"><a href="#cb25-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>dl04) <span class="sc">%&gt;%</span> </span>
-<span id="cb25-36"><a href="#cb25-36" aria-hidden="true" tabindex="-1"></a>  <span class="co"># imputing education from cateogricals</span></span>
-<span id="cb25-37"><a href="#cb25-37" aria-hidden="true" tabindex="-1"></a>  <span class="co"># elementary school to 6</span></span>
-<span id="cb25-38"><a href="#cb25-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">education =</span> <span class="fu">if_else</span>(<span class="fu">is.na</span>(education) <span class="sc">&amp;</span> dl06 <span class="sc">==</span> <span class="dv">2</span>, <span class="dv">6</span>, education)) <span class="sc">%&gt;%</span> </span>
-<span id="cb25-39"><a href="#cb25-39" aria-hidden="true" tabindex="-1"></a>  <span class="co"># junior high to 9</span></span>
-<span id="cb25-40"><a href="#cb25-40" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">education =</span> <span class="fu">if_else</span>(<span class="fu">is.na</span>(education) <span class="sc">&amp;</span> </span>
-<span id="cb25-41"><a href="#cb25-41" aria-hidden="true" tabindex="-1"></a>                               (dl06 <span class="sc">==</span> <span class="dv">3</span> <span class="sc">|</span> dl06 <span class="sc">==</span> <span class="dv">4</span>), <span class="dv">9</span>, education)) <span class="sc">%&gt;%</span> </span>
-<span id="cb25-42"><a href="#cb25-42" aria-hidden="true" tabindex="-1"></a>  <span class="co"># senior high to 12</span></span>
-<span id="cb25-43"><a href="#cb25-43" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">education =</span> <span class="fu">if_else</span>(<span class="fu">is.na</span>(education) <span class="sc">&amp;</span> </span>
-<span id="cb25-44"><a href="#cb25-44" aria-hidden="true" tabindex="-1"></a>                               (dl06 <span class="sc">==</span> <span class="dv">5</span> <span class="sc">|</span> dl06 <span class="sc">==</span> <span class="dv">6</span>), <span class="dv">12</span>, education)) <span class="sc">%&gt;%</span> </span>
-<span id="cb25-45"><a href="#cb25-45" aria-hidden="true" tabindex="-1"></a>  <span class="co"># uni to 16</span></span>
-<span id="cb25-46"><a href="#cb25-46" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">education =</span> <span class="fu">if_else</span>(<span class="fu">is.na</span>(education) <span class="sc">&amp;</span> </span>
-<span id="cb25-47"><a href="#cb25-47" aria-hidden="true" tabindex="-1"></a>                               (dl06 <span class="sc">==</span> <span class="dv">13</span> <span class="sc">|</span> dl06 <span class="sc">==</span> <span class="dv">60</span> <span class="sc">|</span> dl06 <span class="sc">==</span> <span class="dv">61</span>), <span class="dv">16</span>, education)) <span class="sc">%&gt;%</span>   <span class="fu">select</span>(<span class="sc">-</span>dl06) <span class="sc">%&gt;%</span> </span>
-<span id="cb25-48"><a href="#cb25-48" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(education)) <span class="sc">%&gt;%</span></span>
-<span id="cb25-49"><a href="#cb25-49" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(education <span class="sc">&gt;=</span> <span class="dv">0</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb25-50"><a href="#cb25-50" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb25-51"><a href="#cb25-51" aria-hidden="true" tabindex="-1"></a>  <span class="co"># disease management</span></span>
-<span id="cb25-52"><a href="#cb25-52" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(b3b_rj3) <span class="sc">%&gt;%</span> </span>
-<span id="cb25-53"><a href="#cb25-53" aria-hidden="true" tabindex="-1"></a>  <span class="co"># second version imputing missing to zero (ie. &#39;no&#39;)</span></span>
-<span id="cb25-54"><a href="#cb25-54" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">bp_month2 =</span> <span class="fu">ifelse</span>(<span class="fu">is.na</span>(bp_month), <span class="dv">0</span>, bp_month))</span>
-<span id="cb25-55"><a href="#cb25-55" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-56"><a href="#cb25-56" aria-hidden="true" tabindex="-1"></a><span class="co"># rm(bus_1, b3b_cd3, b1_ks2, b3b_kk1, b1_pp, b3a_dl1, b3b_rj3)</span></span></code></pre></div>
+<p>Last but not least, risk and time preferences are combined across two
+variables:<br />
+- if risk 1 is missing and 2 no then 2 is used - if risk 1 is zero then
+two is used instead</p>
+<p>Zero and missing values of such constructed variables are then
+excluded.</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> bus_1 <span class="sc">%&gt;%</span> </span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># hyper diagnosis</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(b3b_cd3) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># exclude missings</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(underdiagnosed)) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># expenditures</span></span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(b1_ks2) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>  <span class="co"># exclude missings</span></span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(expenditures)) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>  <span class="co"># avoid 0s for log</span></span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">expenditures =</span> <span class="fu">if_else</span>(expenditures <span class="sc">==</span> <span class="dv">0</span>, <span class="dv">1</span>, expenditures)) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>  <span class="co"># log</span></span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">expenditures_log =</span> <span class="fu">log</span>(expenditures)) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>expenditures) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a>  <span class="co"># bad health</span></span>
+<span id="cb27-19"><a href="#cb27-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(b3b_kk1) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-20"><a href="#cb27-20" aria-hidden="true" tabindex="-1"></a>  <span class="co"># exclude missings</span></span>
+<span id="cb27-21"><a href="#cb27-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(poor_health)) <span class="sc">%&gt;%</span>  </span>
+<span id="cb27-22"><a href="#cb27-22" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb27-23"><a href="#cb27-23" aria-hidden="true" tabindex="-1"></a>  <span class="co"># distance</span></span>
+<span id="cb27-24"><a href="#cb27-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(b1_pp) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-25"><a href="#cb27-25" aria-hidden="true" tabindex="-1"></a>  <span class="co"># exclude missings</span></span>
+<span id="cb27-26"><a href="#cb27-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(travel_time)) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-27"><a href="#cb27-27" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb27-28"><a href="#cb27-28" aria-hidden="true" tabindex="-1"></a>  <span class="co"># education</span></span>
+<span id="cb27-29"><a href="#cb27-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(b3a_dl1) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-30"><a href="#cb27-30" aria-hidden="true" tabindex="-1"></a>  <span class="co"># calculate years of education</span></span>
+<span id="cb27-31"><a href="#cb27-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">education =</span> dl07byr <span class="sc">-</span> us02yr <span class="sc">-</span> dl05a) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-32"><a href="#cb27-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>dl07byr, <span class="sc">-</span>us02yr, <span class="sc">-</span>dl05a) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-33"><a href="#cb27-33" aria-hidden="true" tabindex="-1"></a>  <span class="co"># zero for those who never attended</span></span>
+<span id="cb27-34"><a href="#cb27-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">education =</span> <span class="fu">if_else</span>(dl04 <span class="sc">==</span> <span class="dv">3</span>, <span class="dv">0</span>, education)) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-35"><a href="#cb27-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>dl04) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-36"><a href="#cb27-36" aria-hidden="true" tabindex="-1"></a>  <span class="co"># imputing education from cateogricals</span></span>
+<span id="cb27-37"><a href="#cb27-37" aria-hidden="true" tabindex="-1"></a>  <span class="co"># elementary school to 6</span></span>
+<span id="cb27-38"><a href="#cb27-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">education =</span> <span class="fu">if_else</span>(<span class="fu">is.na</span>(education) <span class="sc">&amp;</span> dl06 <span class="sc">==</span> <span class="dv">2</span>, <span class="dv">6</span>, education)) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-39"><a href="#cb27-39" aria-hidden="true" tabindex="-1"></a>  <span class="co"># junior high to 9</span></span>
+<span id="cb27-40"><a href="#cb27-40" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">education =</span> <span class="fu">if_else</span>(<span class="fu">is.na</span>(education) <span class="sc">&amp;</span> </span>
+<span id="cb27-41"><a href="#cb27-41" aria-hidden="true" tabindex="-1"></a>                               (dl06 <span class="sc">==</span> <span class="dv">3</span> <span class="sc">|</span> dl06 <span class="sc">==</span> <span class="dv">4</span>), <span class="dv">9</span>, education)) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-42"><a href="#cb27-42" aria-hidden="true" tabindex="-1"></a>  <span class="co"># senior high to 12</span></span>
+<span id="cb27-43"><a href="#cb27-43" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">education =</span> <span class="fu">if_else</span>(<span class="fu">is.na</span>(education) <span class="sc">&amp;</span> </span>
+<span id="cb27-44"><a href="#cb27-44" aria-hidden="true" tabindex="-1"></a>                               (dl06 <span class="sc">==</span> <span class="dv">5</span> <span class="sc">|</span> dl06 <span class="sc">==</span> <span class="dv">6</span>), <span class="dv">12</span>, education)) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-45"><a href="#cb27-45" aria-hidden="true" tabindex="-1"></a>  <span class="co"># uni to 16</span></span>
+<span id="cb27-46"><a href="#cb27-46" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">education =</span> <span class="fu">if_else</span>(<span class="fu">is.na</span>(education) <span class="sc">&amp;</span> </span>
+<span id="cb27-47"><a href="#cb27-47" aria-hidden="true" tabindex="-1"></a>                               (dl06 <span class="sc">==</span> <span class="dv">13</span> <span class="sc">|</span> dl06 <span class="sc">==</span> <span class="dv">60</span> <span class="sc">|</span> dl06 <span class="sc">==</span> <span class="dv">61</span>), <span class="dv">16</span>, education)) <span class="sc">%&gt;%</span>   <span class="fu">select</span>(<span class="sc">-</span>dl06) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-48"><a href="#cb27-48" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(education)) <span class="sc">%&gt;%</span></span>
+<span id="cb27-49"><a href="#cb27-49" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(education <span class="sc">&gt;=</span> <span class="dv">0</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb27-50"><a href="#cb27-50" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb27-51"><a href="#cb27-51" aria-hidden="true" tabindex="-1"></a>  <span class="co"># time</span></span>
+<span id="cb27-52"><a href="#cb27-52" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(time1) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-53"><a href="#cb27-53" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(time2) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-54"><a href="#cb27-54" aria-hidden="true" tabindex="-1"></a>  <span class="co"># imputing missings in 1 from 2</span></span>
+<span id="cb27-55"><a href="#cb27-55" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">time =</span> <span class="fu">ifelse</span>(<span class="sc">!</span><span class="fu">is.na</span>(time1), time1, time2)) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-56"><a href="#cb27-56" aria-hidden="true" tabindex="-1"></a>  <span class="co"># imputing 0 category in 1 from 2</span></span>
+<span id="cb27-57"><a href="#cb27-57" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">time =</span> <span class="fu">ifelse</span>(time1 <span class="sc">==</span> <span class="dv">0</span>, time2, time1)) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-58"><a href="#cb27-58" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(time)) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-59"><a href="#cb27-59" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(time <span class="sc">&gt;</span> <span class="dv">0</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-60"><a href="#cb27-60" aria-hidden="true" tabindex="-1"></a>  <span class="fu">relocate</span>(time, <span class="at">.before =</span> time1) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-61"><a href="#cb27-61" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb27-62"><a href="#cb27-62" aria-hidden="true" tabindex="-1"></a>  <span class="co"># risk</span></span>
+<span id="cb27-63"><a href="#cb27-63" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(risk1) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-64"><a href="#cb27-64" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(risk2) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-65"><a href="#cb27-65" aria-hidden="true" tabindex="-1"></a>  <span class="co"># imputing missings in 1 from 2</span></span>
+<span id="cb27-66"><a href="#cb27-66" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">risk =</span> <span class="fu">ifelse</span>(<span class="sc">!</span><span class="fu">is.na</span>(risk1), risk1, risk2)) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-67"><a href="#cb27-67" aria-hidden="true" tabindex="-1"></a>  <span class="co"># imputing 0 category in 1 from 2</span></span>
+<span id="cb27-68"><a href="#cb27-68" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">risk =</span> <span class="fu">ifelse</span>(risk1 <span class="sc">==</span> <span class="dv">0</span>, risk2, risk1)) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-69"><a href="#cb27-69" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(risk)) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-70"><a href="#cb27-70" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(risk <span class="sc">&gt;</span> <span class="dv">0</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-71"><a href="#cb27-71" aria-hidden="true" tabindex="-1"></a>  <span class="fu">relocate</span>(risk, <span class="at">.before =</span> risk1) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-72"><a href="#cb27-72" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb27-73"><a href="#cb27-73" aria-hidden="true" tabindex="-1"></a>  <span class="co"># disease management</span></span>
+<span id="cb27-74"><a href="#cb27-74" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(b3b_rj3) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-75"><a href="#cb27-75" aria-hidden="true" tabindex="-1"></a>  <span class="co"># second version imputing missing to zero (ie. &#39;no&#39;)</span></span>
+<span id="cb27-76"><a href="#cb27-76" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">bp_month2 =</span> <span class="fu">ifelse</span>(<span class="fu">is.na</span>(bp_month), <span class="dv">0</span>, bp_month))</span></code></pre></div>
 </div>
 <div id="dataset" class="section level2">
 <h2>Dataset</h2>
-<pre><code>The data contains 3342 observations of the following 13 variables:
+<pre><code>The data contains 3131 observations of the following 12 variables:
 
-  - hhid07_9: n = 3342, Mean = 1.71e+08, SD = 9.00e+07, Median = 1.74e+08, MAD = 1.10e+08, range: [1220000, 321280000], Skewness = -0.11, Kurtosis = -1.14, 0% missing
-  - hhid07: n = 3342, Mean = 1.71e+06, SD = 9.00e+05, Median = 1.74e+06, MAD = 1.10e+06, range: [12200, 3212800], Skewness = -0.11, Kurtosis = -1.14, 0% missing
-  - pid07: n = 3342, Mean = 2.02, SD = 1.77, Median = 2.00, MAD = 1.48, range: [1, 22], Skewness = 3.73, Kurtosis = 20.80, 0% missing
-  - sex: 2 levels, namely 1 (n = 1434, 42.91%) and 3 (n = 1908, 57.09%)
-  - age: n = 3342, Mean = 59.47, SD = 10.30, Median = 58.00, MAD = 11.86, range: [45, 100], Skewness = 0.57, Kurtosis = -0.36, 0% missing
-  - age2: n = 3342, Mean = 3642.41, SD = 1291.10, Median = 3364.00, MAD = 1280.97, range: [2025, 10000], Skewness = 0.91, Kurtosis = 0.51, 0% missing
-  - underdiagnosed: 2 levels, namely 0 (n = 1159, 34.68%) and 1 (n = 2183, 65.32%)
-  - expenditures_log: n = 3342, Mean = 12.49, SD = 1.55, Median = 12.51, MAD = 1.27, range: [0, 20.03], Skewness = -0.40, Kurtosis = 10.88, 0% missing
-  - poor_health: 2 levels, namely 0 (n = 2510, 75.10%) and 1 (n = 832, 24.90%)
-  - travel_time: n = 3342, Mean = 17.78, SD = 86.60, Median = 10.00, MAD = 7.41, range: [1, 2880], Skewness = 27.51, Kurtosis = 826.57, 0% missing
-  - education: n = 3342, Mean = 6.17, SD = 5.33, Median = 6.00, MAD = 4.45, range: [0, 43], Skewness = 1.80, Kurtosis = 7.70, 0% missing
-  - bp_month: 2 levels, namely 0 (n = 660, 19.75%), 1 (n = 292, 8.74%) and missing (n = 2390, 71.51%)
-  - bp_month2: n = 3342, Mean = 0.09, SD = 0.28, Median = 0.00, MAD = 0.00, range: [0, 1], Skewness = 2.92, Kurtosis = 6.55, 0% missing</code></pre>
+  - age: n = 3131, Mean = 59.14, SD = 10.15, Median = 57.00, MAD = 11.86, range: [45, 100], Skewness = 0.61, Kurtosis = -0.30, 0% missing
+  - age2: n = 3131, Mean = 3600.65, SD = 1268.56, Median = 3249.00, MAD = 1257.24, range: [2025, 10000], Skewness = 0.95, Kurtosis = 0.59, 0% missing
+  - sex: 2 levels, namely 0 (n = 1359, 43.40%) and 1 (n = 1772, 56.60%)
+  - underdiagnosed: 2 levels, namely 0 (n = 1093, 34.91%) and 1 (n = 2038, 65.09%)
+  - expenditures_log: n = 3131, Mean = 12.51, SD = 1.51, Median = 12.52, MAD = 1.26, range: [0, 20.03], Skewness = -0.14, Kurtosis = 9.91, 0% missing
+  - poor_health: 2 levels, namely 0 (n = 2375, 75.85%) and 1 (n = 756, 24.15%)
+  - travel_time: n = 3131, Mean = 17.87, SD = 89.39, Median = 10.00, MAD = 7.41, range: [1, 2880], Skewness = 26.70, Kurtosis = 777.19, 0% missing
+  - education: n = 3131, Mean = 6.27, SD = 5.39, Median = 6.00, MAD = 4.45, range: [0, 43], Skewness = 1.81, Kurtosis = 7.70, 0% missing
+  - time: n = 3131, Mean = 3.59, SD = 0.87, Median = 4.00, MAD = 0.00, range: [1, 4], Skewness = -2.10, Kurtosis = 3.19, 0% missing
+  - risk: n = 3131, Mean = 3.37, SD = 1.12, Median = 4.00, MAD = 0.00, range: [1, 4], Skewness = -1.40, Kurtosis = 0.21, 0% missing
+  - bp_month: 2 levels, namely 0 (n = 621, 19.83%), 1 (n = 274, 8.75%) and missing (n = 2236, 71.41%)
+  - bp_month2: n = 3131, Mean = 0.09, SD = 0.28, Median = 0.00, MAD = 0.00, range: [0, 1], Skewness = 2.92, Kurtosis = 6.54, 0% missing</code></pre>
 </div>
 <div id="summaries" class="section level2">
 <h2>Summaries</h2>
-<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">frq</span>(data, underdiagnosed)</span></code></pre></div>
+<p>Various tabulations and summaries of variables used for selecting
+patients and running regression models.</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">frq</span>(data, poor_health)</span></code></pre></div>
+<pre><code>poor_health &lt;numeric&gt; 
+# total N=3131 valid N=3131 mean=0.24 sd=0.43
+
+Value |    N | Raw % | Valid % | Cum. %
+---------------------------------------
+    0 | 2375 | 75.85 |   75.85 |  75.85
+    1 |  756 | 24.15 |   24.15 | 100.00
+ &lt;NA&gt; |    0 |  0.00 |    &lt;NA&gt; |   &lt;NA&gt;</code></pre>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">frq</span>(data, underdiagnosed)</span></code></pre></div>
 <pre><code>underdiagnosed &lt;numeric&gt; 
-# total N=3342 valid N=3342 mean=0.65 sd=0.48
+# total N=3131 valid N=3131 mean=0.65 sd=0.48
 
 Value |    N | Raw % | Valid % | Cum. %
 ---------------------------------------
-    0 | 1159 | 34.68 |   34.68 |  34.68
-    1 | 2183 | 65.32 |   65.32 | 100.00
+    0 | 1093 | 34.91 |   34.91 |  34.91
+    1 | 2038 | 65.09 |   65.09 | 100.00
  &lt;NA&gt; |    0 |  0.00 |    &lt;NA&gt; |   &lt;NA&gt;</code></pre>
-<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">frq</span>(data, sex)</span></code></pre></div>
-<pre><code>sex &lt;numeric&gt; 
-# total N=3342 valid N=3342 mean=2.14 sd=0.99
-
-Value |    N | Raw % | Valid % | Cum. %
----------------------------------------
-    1 | 1434 | 42.91 |   42.91 |  42.91
-    3 | 1908 | 57.09 |   57.09 | 100.00
- &lt;NA&gt; |    0 |  0.00 |    &lt;NA&gt; |   &lt;NA&gt;</code></pre>
-<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>gmodels<span class="sc">::</span><span class="fu">CrossTable</span>(data<span class="sc">$</span>sex, data<span class="sc">$</span>underdiagnosed,</span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>                    <span class="at">digits =</span> <span class="dv">2</span>, <span class="at">prop.chisq =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>gmodels<span class="sc">::</span><span class="fu">CrossTable</span>(data<span class="sc">$</span>underdiagnosed, data<span class="sc">$</span>poor_health,</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>                    <span class="at">digits =</span> <span class="dv">2</span>, <span class="at">prop.chisq =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
 <pre><code>
  
    Cell Contents
@@ -2346,47 +2587,294 @@ Value |    N | Raw % | Valid % | Cum. %
 |-------------------------|
 
  
-Total Observations in Table:  3342 
+Total Observations in Table:  3131 
 
  
-             | data$underdiagnosed 
-    data$sex |         0 |         1 | Row Total | 
--------------|-----------|-----------|-----------|
-           1 |       392 |      1042 |      1434 | 
-             |      0.27 |      0.73 |      0.43 | 
-             |      0.34 |      0.48 |           | 
-             |      0.12 |      0.31 |           | 
--------------|-----------|-----------|-----------|
-           3 |       767 |      1141 |      1908 | 
-             |      0.40 |      0.60 |      0.57 | 
-             |      0.66 |      0.52 |           | 
-             |      0.23 |      0.34 |           | 
--------------|-----------|-----------|-----------|
-Column Total |      1159 |      2183 |      3342 | 
-             |      0.35 |      0.65 |           | 
--------------|-----------|-----------|-----------|
+                    | data$poor_health 
+data$underdiagnosed |         0 |         1 | Row Total | 
+--------------------|-----------|-----------|-----------|
+                  0 |       718 |       375 |      1093 | 
+                    |      0.66 |      0.34 |      0.35 | 
+                    |      0.30 |      0.50 |           | 
+                    |      0.23 |      0.12 |           | 
+--------------------|-----------|-----------|-----------|
+                  1 |      1657 |       381 |      2038 | 
+                    |      0.81 |      0.19 |      0.65 | 
+                    |      0.70 |      0.50 |           | 
+                    |      0.53 |      0.12 |           | 
+--------------------|-----------|-----------|-----------|
+       Column Total |      2375 |       756 |      3131 | 
+                    |      0.76 |      0.24 |           | 
+--------------------|-----------|-----------|-----------|
 
  </code></pre>
-<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">frq</span>(data <span class="sc">%&gt;%</span> <span class="fu">filter</span>(underdiagnosed <span class="sc">==</span> <span class="dv">0</span>), bp_month)</span></code></pre></div>
-<pre><code>bp_month &lt;numeric&gt; 
-# total N=1159 valid N=467 mean=0.32 sd=0.47
-
-Value |   N | Raw % | Valid % | Cum. %
---------------------------------------
-    0 | 317 | 27.35 |   67.88 |  67.88
-    1 | 150 | 12.94 |   32.12 | 100.00
- &lt;NA&gt; | 692 | 59.71 |    &lt;NA&gt; |   &lt;NA&gt;</code></pre>
-<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">frq</span>(data, poor_health)</span></code></pre></div>
-<pre><code>poor_health &lt;numeric&gt; 
-# total N=3342 valid N=3342 mean=0.25 sd=0.43
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(data<span class="sc">$</span>age)</span></code></pre></div>
+<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  45.00   51.00   57.00   59.14   66.00  100.00 </code></pre>
+<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(data<span class="sc">$</span>education)</span></code></pre></div>
+<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   2.000   6.000   6.269   9.000  43.000 </code></pre>
+<div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(data<span class="sc">$</span>expenditures_log)</span></code></pre></div>
+<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   0.00   11.64   12.52   12.51   13.33   20.03 </code></pre>
+<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(data<span class="sc">$</span>travel_time)</span></code></pre></div>
+<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   1.00    5.00   10.00   17.87   15.00 2880.00 </code></pre>
+<div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">frq</span>(data, risk)</span></code></pre></div>
+<pre><code>risk &lt;numeric&gt; 
+# total N=3131 valid N=3131 mean=3.37 sd=1.12
 
 Value |    N | Raw % | Valid % | Cum. %
 ---------------------------------------
-    0 | 2510 | 75.10 |   75.10 |  75.10
-    1 |  832 | 24.90 |   24.90 | 100.00
+    1 |  456 | 14.56 |   14.56 |  14.56
+    2 |  215 |  6.87 |    6.87 |  21.43
+    3 |  168 |  5.37 |    5.37 |  26.80
+    4 | 2292 | 73.20 |   73.20 | 100.00
  &lt;NA&gt; |    0 |  0.00 |    &lt;NA&gt; |   &lt;NA&gt;</code></pre>
-<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># frq(data, education)</span></span></code></pre></div>
+<div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>gmodels<span class="sc">::</span><span class="fu">CrossTable</span>(data<span class="sc">$</span>risk1, data<span class="sc">$</span>risk2,</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>                    <span class="at">digits =</span> <span class="dv">2</span>, <span class="at">prop.chisq =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
+<pre><code>
+ 
+   Cell Contents
+|-------------------------|
+|                       N |
+|           N / Row Total |
+|           N / Col Total |
+|         N / Table Total |
+|-------------------------|
+
+ 
+Total Observations in Table:  2963 
+
+ 
+             | data$risk2 
+  data$risk1 |         1 |         2 |         3 |         4 | Row Total | 
+-------------|-----------|-----------|-----------|-----------|-----------|
+           0 |        14 |        22 |        29 |      1382 |      1447 | 
+             |      0.01 |      0.02 |      0.02 |      0.96 |      0.49 | 
+             |      0.10 |      0.36 |      0.17 |      0.53 |           | 
+             |      0.00 |      0.01 |      0.01 |      0.47 |           | 
+-------------|-----------|-----------|-----------|-----------|-----------|
+           1 |       100 |        22 |        56 |       152 |       330 | 
+             |      0.30 |      0.07 |      0.17 |      0.46 |      0.11 | 
+             |      0.74 |      0.36 |      0.33 |      0.06 |           | 
+             |      0.03 |      0.01 |      0.02 |      0.05 |           | 
+-------------|-----------|-----------|-----------|-----------|-----------|
+           2 |         6 |         5 |        28 |       131 |       170 | 
+             |      0.04 |      0.03 |      0.16 |      0.77 |      0.06 | 
+             |      0.04 |      0.08 |      0.16 |      0.05 |           | 
+             |      0.00 |      0.00 |      0.01 |      0.04 |           | 
+-------------|-----------|-----------|-----------|-----------|-----------|
+           3 |         7 |         5 |        36 |        83 |       131 | 
+             |      0.05 |      0.04 |      0.27 |      0.63 |      0.04 | 
+             |      0.05 |      0.08 |      0.21 |      0.03 |           | 
+             |      0.00 |      0.00 |      0.01 |      0.03 |           | 
+-------------|-----------|-----------|-----------|-----------|-----------|
+           4 |         9 |         7 |        21 |       848 |       885 | 
+             |      0.01 |      0.01 |      0.02 |      0.96 |      0.30 | 
+             |      0.07 |      0.11 |      0.12 |      0.33 |           | 
+             |      0.00 |      0.00 |      0.01 |      0.29 |           | 
+-------------|-----------|-----------|-----------|-----------|-----------|
+Column Total |       136 |        61 |       170 |      2596 |      2963 | 
+             |      0.05 |      0.02 |      0.06 |      0.88 |           | 
+-------------|-----------|-----------|-----------|-----------|-----------|
+
+ </code></pre>
+<div class="sourceCode" id="cb47"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">frq</span>(data, time)</span></code></pre></div>
+<pre><code>time &lt;numeric&gt; 
+# total N=3131 valid N=3131 mean=3.59 sd=0.87
+
+Value |    N | Raw % | Valid % | Cum. %
+---------------------------------------
+    1 |  218 |  6.96 |    6.96 |   6.96
+    2 |  139 |  4.44 |    4.44 |  11.40
+    3 |  347 | 11.08 |   11.08 |  22.48
+    4 | 2427 | 77.52 |   77.52 | 100.00
+ &lt;NA&gt; |    0 |  0.00 |    &lt;NA&gt; |   &lt;NA&gt;</code></pre>
+<div class="sourceCode" id="cb49"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>gmodels<span class="sc">::</span><span class="fu">CrossTable</span>(data<span class="sc">$</span>time1, data<span class="sc">$</span>time2,</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>                    <span class="at">digits =</span> <span class="dv">2</span>, <span class="at">prop.chisq =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
+<pre><code>
+ 
+   Cell Contents
+|-------------------------|
+|                       N |
+|           N / Row Total |
+|           N / Col Total |
+|         N / Table Total |
+|-------------------------|
+
+ 
+Total Observations in Table:  3131 
+
+ 
+             | data$time2 
+  data$time1 |         0 |         1 |         2 |         3 |         4 | Row Total | 
+-------------|-----------|-----------|-----------|-----------|-----------|-----------|
+           0 |         0 |         4 |         9 |         5 |        22 |        40 | 
+             |      0.00 |      0.10 |      0.22 |      0.12 |      0.55 |      0.01 | 
+             |      0.00 |      0.04 |      0.14 |      0.02 |      0.01 |           | 
+             |      0.00 |      0.00 |      0.00 |      0.00 |      0.01 |           | 
+-------------|-----------|-----------|-----------|-----------|-----------|-----------|
+           1 |         1 |        44 |        45 |        46 |        78 |       214 | 
+             |      0.00 |      0.21 |      0.21 |      0.21 |      0.36 |      0.07 | 
+             |      0.09 |      0.46 |      0.68 |      0.17 |      0.03 |           | 
+             |      0.00 |      0.01 |      0.01 |      0.01 |      0.02 |           | 
+-------------|-----------|-----------|-----------|-----------|-----------|-----------|
+           2 |         2 |        18 |         3 |        36 |        71 |       130 | 
+             |      0.02 |      0.14 |      0.02 |      0.28 |      0.55 |      0.04 | 
+             |      0.18 |      0.19 |      0.05 |      0.13 |      0.03 |           | 
+             |      0.00 |      0.01 |      0.00 |      0.01 |      0.02 |           | 
+-------------|-----------|-----------|-----------|-----------|-----------|-----------|
+           3 |         2 |        19 |         6 |       123 |       192 |       342 | 
+             |      0.01 |      0.06 |      0.02 |      0.36 |      0.56 |      0.11 | 
+             |      0.18 |      0.20 |      0.09 |      0.46 |      0.07 |           | 
+             |      0.00 |      0.01 |      0.00 |      0.04 |      0.06 |           | 
+-------------|-----------|-----------|-----------|-----------|-----------|-----------|
+           4 |         6 |        10 |         3 |        58 |      2328 |      2405 | 
+             |      0.00 |      0.00 |      0.00 |      0.02 |      0.97 |      0.77 | 
+             |      0.55 |      0.11 |      0.05 |      0.22 |      0.87 |           | 
+             |      0.00 |      0.00 |      0.00 |      0.02 |      0.74 |           | 
+-------------|-----------|-----------|-----------|-----------|-----------|-----------|
+Column Total |        11 |        95 |        66 |       268 |      2691 |      3131 | 
+             |      0.00 |      0.03 |      0.02 |      0.09 |      0.86 |           | 
+-------------|-----------|-----------|-----------|-----------|-----------|-----------|
+
+ </code></pre>
+<div class="sourceCode" id="cb51"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="fu">frq</span>(data, sex)</span></code></pre></div>
+<pre><code>sex &lt;numeric&gt; 
+# total N=3131 valid N=3131 mean=0.57 sd=0.50
+
+Value |    N | Raw % | Valid % | Cum. %
+---------------------------------------
+    0 | 1359 | 43.40 |   43.40 |  43.40
+    1 | 1772 | 56.60 |   56.60 | 100.00
+ &lt;NA&gt; |    0 |  0.00 |    &lt;NA&gt; |   &lt;NA&gt;</code></pre>
+<div class="sourceCode" id="cb53"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="fu">frq</span>(data <span class="sc">%&gt;%</span> <span class="fu">filter</span>(underdiagnosed <span class="sc">==</span> <span class="dv">0</span>), bp_month)</span></code></pre></div>
+<pre><code>bp_month &lt;numeric&gt; 
+# total N=1093 valid N=441 mean=0.32 sd=0.47
+
+Value |   N | Raw % | Valid % | Cum. %
+--------------------------------------
+    0 | 300 | 27.45 |   68.03 |  68.03
+    1 | 141 | 12.90 |   31.97 | 100.00
+ &lt;NA&gt; | 652 | 59.65 |    &lt;NA&gt; |   &lt;NA&gt;</code></pre>
+<div class="sourceCode" id="cb55"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="fu">frq</span>(data <span class="sc">%&gt;%</span> <span class="fu">filter</span>(underdiagnosed <span class="sc">==</span> <span class="dv">0</span>), bp_month2)</span></code></pre></div>
+<pre><code>bp_month2 &lt;numeric&gt; 
+# total N=1093 valid N=1093 mean=0.13 sd=0.34
+
+Value |   N | Raw % | Valid % | Cum. %
+--------------------------------------
+    0 | 952 | 87.10 |   87.10 |  87.10
+    1 | 141 | 12.90 |   12.90 | 100.00
+ &lt;NA&gt; |   0 |  0.00 |    &lt;NA&gt; |   &lt;NA&gt;</code></pre>
+<div class="sourceCode" id="cb57"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>data_diag <span class="ot">&lt;-</span> data <span class="sc">%&gt;%</span> </span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(underdiagnosed <span class="sc">==</span> <span class="dv">0</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>underdiagnosed)</span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a>gmodels<span class="sc">::</span><span class="fu">CrossTable</span>(data_diag<span class="sc">$</span>sex, data_diag<span class="sc">$</span>bp_month,</span>
+<span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a>                    <span class="at">digits =</span> <span class="dv">2</span>, <span class="at">prop.chisq =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
+<pre><code>
+ 
+   Cell Contents
+|-------------------------|
+|                       N |
+|           N / Row Total |
+|           N / Col Total |
+|         N / Table Total |
+|-------------------------|
+
+ 
+Total Observations in Table:  441 
+
+ 
+              | data_diag$bp_month 
+data_diag$sex |         0 |         1 | Row Total | 
+--------------|-----------|-----------|-----------|
+            0 |        17 |         7 |        24 | 
+              |      0.71 |      0.29 |      0.05 | 
+              |      0.06 |      0.05 |           | 
+              |      0.04 |      0.02 |           | 
+--------------|-----------|-----------|-----------|
+            1 |       283 |       134 |       417 | 
+              |      0.68 |      0.32 |      0.95 | 
+              |      0.94 |      0.95 |           | 
+              |      0.64 |      0.30 |           | 
+--------------|-----------|-----------|-----------|
+ Column Total |       300 |       141 |       441 | 
+              |      0.68 |      0.32 |           | 
+--------------|-----------|-----------|-----------|
+
+ </code></pre>
+<div class="sourceCode" id="cb59"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a>gmodels<span class="sc">::</span><span class="fu">CrossTable</span>(data_diag<span class="sc">$</span>sex, data_diag<span class="sc">$</span>bp_month2,</span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>                    <span class="at">digits =</span> <span class="dv">2</span>, <span class="at">prop.chisq =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
+<pre><code>
+ 
+   Cell Contents
+|-------------------------|
+|                       N |
+|           N / Row Total |
+|           N / Col Total |
+|         N / Table Total |
+|-------------------------|
+
+ 
+Total Observations in Table:  1093 
+
+ 
+              | data_diag$bp_month2 
+data_diag$sex |         0 |         1 | Row Total | 
+--------------|-----------|-----------|-----------|
+            0 |       366 |         7 |       373 | 
+              |      0.98 |      0.02 |      0.34 | 
+              |      0.38 |      0.05 |           | 
+              |      0.33 |      0.01 |           | 
+--------------|-----------|-----------|-----------|
+            1 |       586 |       134 |       720 | 
+              |      0.81 |      0.19 |      0.66 | 
+              |      0.62 |      0.95 |           | 
+              |      0.54 |      0.12 |           | 
+--------------|-----------|-----------|-----------|
+ Column Total |       952 |       141 |      1093 | 
+              |      0.87 |      0.13 |           | 
+--------------|-----------|-----------|-----------|
+
+ </code></pre>
+<!-- ----------------------------------------------------- -->
 </div>
+</div>
+<div id="computing-environment" class="section level1">
+<h1>Computing Environment</h1>
+<pre>
+ R version 4.1.3 (2022-03-10)
+ Platform: x86_64-w64-mingw32/x64 (64-bit)
+ Running under: Windows 10 x64 (build 18363)
+ 
+ Matrix products: default
+ 
+ attached base packages:
+ [1] stats     graphics  grDevices utils     datasets  methods   base     
+ 
+ other attached packages:
+  [1] sjmisc_2.8.9    lubridate_1.8.0 haven_2.4.3     scales_1.1.1   
+  [5] magrittr_2.0.2  forcats_0.5.1   stringr_1.4.0   dplyr_1.0.8    
+  [9] purrr_0.3.4     readr_2.1.2     tidyr_1.2.0     tibble_3.1.6   
+ [13] ggplot2_3.3.5   tidyverse_1.3.1 pacman_0.5.1   
+ </pre>
+ To cite R in publications use:
+ <p>R Core Team (2022).
+ <em>R: A Language and Environment for Statistical Computing</em>.
+ R Foundation for Statistical Computing, Vienna, Austria.
+ <a href="https://www.R-project.org/">https://www.R-project.org/</a>. 
+ </p>
+ 
+To cite the <tt>ggplot2</tt> package in publications use:
+
+ <p>Wickham H (2016).
+ <em>ggplot2: Elegant Graphics for Data Analysis</em>.
+ Springer-Verlag New York.
+ ISBN 978-3-319-24277-4, <a href="https://ggplot2.tidyverse.org">https://ggplot2.tidyverse.org</a>. 
+ </p>
+
 </div>
 
    

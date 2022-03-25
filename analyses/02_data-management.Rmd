@@ -73,36 +73,43 @@ From `bus1_2.dta` file:
 `us07c2`    Blood pressure (3rd measurement)  
 `us07cp`    Blood pressure (3rd measurement)  
 
-Selecting 
+Selecting:  
 
-- 'measured' respondents 
-- respondents with non-missing info on sex and age
+- only 'measured' respondents 
+- respondents with information on sex and age
 - respondents 45 years of age and above
-- respondents with non-missing info on blood pressure measurements.   
+- respondents with information on two blood pressure measurements (2nd & 3rd measurement).   
 
-At next step the second and third bp measures were averaged and finally hypertensive individuals only were retained.  
+The second and third blood pressure measures were averaged and finally only hypertensive individuals were included  
 
 ```{r}
 bus1_1 <- read_dta("data-raw/IFLS4/hh07_all_dta/bus1_1.dta") %>% 
   # zap_label() %>% 
   zap_labels() %>% zap_formats() %>%
-  select(hhid07_9,hhid07, pid07,
+  select(hhid07_9, hhid07, pid07,
          us00,
          us01, us03,
          us02yr,
          us07bx, us07b1, us07b2) %>% 
   mutate_all(as.numeric) %>% 
+  
+  # only measured respondents
+  filter(us00 == 1) %>% 
+  select(-us00) %>% 
+  
   # missing sex
   filter(!is.na(us01)) %>% 
+  # recoding sex for regression
+  mutate(sex = ifelse(us01 == 1, 0, 1)) %>% 
+  select(-us01) %>% 
+  
   # implausible DOB
   mutate(us02yr = if_else(us02yr >= 9998, NA_real_, us02yr)) %>% 
   # missing age
   filter(us03 < 998) %>% 
   # age inclusion
   filter(us03 >= 45) %>% 
-  # only measured respondents
-  filter(us00 == 1) %>% 
-  select(-us00) %>% 
+  
   # bp1 measured
   filter(us07bx == 1) %>% 
   select(-us07bx) %>% 
@@ -116,8 +123,10 @@ bus1_2 <- read_dta("data-raw/IFLS4/hh07_all_dta/bus1_2.dta") %>%
   select(hhid07, pid07,
          us07cx, us07c1, us07c2) %>% 
   mutate_all(as.numeric) %>% 
+  
   # bp2 measured
   filter(us07cx == 1) %>% 
+  
   # missing bp
   filter(us07c1 != 999) %>% 
   filter(us07c2 != 999) %>% 
@@ -125,32 +134,43 @@ bus1_2 <- read_dta("data-raw/IFLS4/hh07_all_dta/bus1_2.dta") %>%
 
 bus_1 <- 
   inner_join(bus1_1, bus1_2) %>%
-  # average of two bp measures (2nd and tird)
+  
+  # average of two bp measures (2nd and 3rd)
   rowwise() %>% 
   mutate(us071 = mean(c(us07b1, us07c1), na.rm = FALSE),
          us072 = mean(c(us07b2, us07c2), na.rm = FALSE)) %>% 
   ungroup() %>% 
   select(-us07b1, -us07c1, -us07b2, -us07c2) %>% 
+  
   # selecting hypertensive
   filter(us071 > 140 | us072 > 90) %>% 
   select(-us071, -us072) %>%
-  rename(sex = us01,
-         age = us03) %>% 
+  
+  # misc
+  rename(age = us03) %>% 
   mutate(age2 = age*age) %>% 
   relocate(age2, .after = age)
+```
 
+```{r include=FALSE}
 rm(bus1_1, bus1_2)
 ```
 
-```{r}
-frq(bus_1, sex)
-
+```{r eval=FALSE, include=FALSE}
 summary(bus_1$age)
+```
+
+After this steps end up with `r number(nrow(bus_1), big.mark = ",")` individuals in the dataset which is already diverging from the analysis dataset reported in the paper (N = 4209).  
+
+The sex distribution seems to follow what is reported in the paper:  
+
+```{r echo=FALSE}
+frq(bus_1, sex)
 ```
 
 ## Hypertension diagnosed
 
-From `b3b_cd3.dta` file.   
+From `b3b_cd3.dta` file:  
 
 `cdtype`    Type chronic conditions  
 A. Hypertension  
@@ -175,8 +195,27 @@ b3b_cd3  <- read_dta("data-raw/IFLS4/hh07_all_dta/b3b_cd3.dta") %>%
   rename(underdiagnosed = cd05)
 ```
 
-```{r}
+Proportion of under-diagnosed is higher but this is still dataset without link to the selection of patients made above:  
+
+```{r echo=FALSE}
 frq(b3b_cd3, underdiagnosed)
+```
+
+After the link the proportion is very similar to the one reported in paper but we have a significant amount of missing:  
+
+```{r echo=FALSE}
+bus_1 %>% 
+  left_join(b3b_cd3) %>% 
+  frq(underdiagnosed)
+```
+
+Selecting only under-diagnosed patients counts of sexes resemble these presented in paper:  
+
+```{r echo=FALSE}
+bus_1 %>% 
+  left_join(b3b_cd3) %>% 
+  filter(underdiagnosed == 1) %>% 
+  frq(sex)
 ```
 
 ## Household expenditures
@@ -199,13 +238,21 @@ b1_ks2  <- read_dta("data-raw/IFLS4/hh07_all_dta/b1_ks2.dta") %>%
   ungroup()
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 summary(b1_ks2$expenditures)
+```
+
+We have few households where expenditures are missing. And also - where they are equal zero - the latter will create problems where log of this variable needed for regression is calculated:  
+
+```{r echo=FALSE}
+bus_1 %>% 
+  left_join(b1_ks2) %>% 
+  frq(expenditures == 0)
 ```
 
 ## Health status
 
-From `b3b_kk1.dta` file.  
+From `b3b_kk1.dta` file:  
 
 `kk01`    Generally how is your health?  
 
@@ -225,8 +272,16 @@ b3b_kk1  <- read_dta("data-raw/IFLS4/hh07_all_dta/b3b_kk1.dta") %>%
   select(-kk01)
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 frq(b3b_kk1, poor_health)
+```
+
+There is a poor link between this dataset and the `bus_1` file which results in large amount of missings:     
+
+```{r echo=FALSE}
+bus_1 %>% 
+  left_join(b3b_kk1) %>% 
+  frq(poor_health)
 ```
 
 ## Distance to Health facilities
@@ -235,11 +290,14 @@ Again paper is rather cryptic and specifies it only as:
 
 > the distance from the closest health center (to proxy for the ease of access to medical care)  
 
+The closest variables that would match this description are found in the `b1_pp.dta` dataset:  
+
 `pp5`       One way travel time (unit of measurement)  
 
 `pptype`    Type of out-patient facility  
 C. Public Health Center/Auxiliary Center   
 
+(Note:  it's important to take into account `pp5x` unit of measurement to make them comparable).  
 
 ```{r}
 b1_pp  <- read_dta("data-raw/IFLS4/hh07_all_dta/b1_pp.dta") %>% 
@@ -261,13 +319,21 @@ b1_pp  <- read_dta("data-raw/IFLS4/hh07_all_dta/b1_pp.dta") %>%
   rename(travel_time = pp5)
 ```
 
-```{r}
+```{r eval==FALSE}
 summary(b1_pp$travel_time)
+```
+
+Once again, we have some missing information here:  
+
+```{r echo=FALSE}
+bus_1 %>% 
+  left_join(b1_pp) %>% 
+  frq(is.na(travel_time))
 ```
 
 ## Education
 
-Paper defines it as: 
+Paper defines it laconically as: 
 
 > measured in years of formal education
 
@@ -284,7 +350,7 @@ From `b3a_dl1.dta` file we can grab:
 `dl07d`       IVWR NOTE: Still in school
 1. Yes
 
-These together with `dob` can be used to obtain crude years of education.  
+These together with `dob` these variables can be used to obtain crude years of education.  
 
 ```{r}
 b3a_dl1 <- read_dta("data-raw/IFLS4/hh07_all_dta/b3a_dl1.dta") %>% 
@@ -304,19 +370,180 @@ b3a_dl1 <- read_dta("data-raw/IFLS4/hh07_all_dta/b3a_dl1.dta") %>%
   select(-dl07d)
 ```
 
+Of course - this is only possible for patients that have these variables non missing which seems to be quite a large problem:  
+
+```{r eval=FALSE, include=FALSE}
+bus_1 %>% 
+  left_join(b3a_dl1) %>% 
+  frq(is.na(dl07byr))
+```
+
 ## Risk & time preference
 
 > For the time and risk preference parameters, we follow Ng (2013) and group respondents in four distinct groups from the most patient to the most impatient, respectively from the least risk averse to the most risk averse.   
 
+Paper of Ng defines two measures of risk and two measures of time and does not specify which of them were used and in which form (one vs. the other? combined?).  
+
+Here we prepare all 4 measures (2 for risk and two for time).  
+
+Method of Ng basically takes into accoutn answers to five questions and follows a flowchart to assign the individual to a risk category ranging from 0 to 4.  
+
+From the dataset `b3a_si.dta` we can use variables:  
+
+`si01`               Which money earning option choosen?
+`si02`               Are you sure?
+`si03`               Which option will you choose?
+`si04`               Which option will you choose?
+`si05`               Which option will you choose?
+
+to construct risk measure 1.  
+
 ```{r}
-# b3a_si <- read_dta("data-raw/IFLS4/hh07_all_dta/b3a_si.dta") %>% 
-#   select(pid07, hhid07,
-#          ) 
+risk1 <- read_dta("data-raw/IFLS4/hh07_all_dta/b3a_si.dta") %>%
+  # zap_label() %>% 
+  zap_labels() %>% zap_formats() %>%  
+  select(-version, -module, -pidlink) %>% 
+  mutate_all(as.numeric) %>% 
+  relocate(hhid07, .after = pid07) %>% 
+  filter(si01 < 8) %>% 
+  filter(si02 < 8 | is.na(si02)) %>% 
+  filter(si03 < 8 | is.na(si03)) %>% 
+  filter(si04 < 8 | is.na(si04)) %>% 
+  filter(si05 < 8 | is.na(si05)) %>% 
+  mutate(
+    risk1 = case_when(
+      si01 == 1 & si02 == 1    ~ 0,
+      si03 == 2 & si05 == 2    ~ 1,
+      si03 == 2 & si05 == 1    ~ 2,
+      si03 == 1 & si04 == 2    ~ 3,
+      si03 == 1 & si04 == 1    ~ 4
+    )
+  ) %>% 
+  select(pid07, hhid07, risk1)
 ```
 
-TBD..  
+Then in a similar vein variables `si11` to `si15` can be used to construct risk measure 2.  
+
+```{r}
+risk2 <- read_dta("data-raw/IFLS4/hh07_all_dta/b3a_si.dta") %>%
+  # zap_label() %>% 
+  zap_labels() %>% zap_formats() %>%  
+  select(-version, -module, -pidlink) %>% 
+  mutate_all(as.numeric) %>% 
+  relocate(hhid07, .after = pid07) %>% 
+  filter(si11 < 8) %>% 
+  filter(si12 < 8 | is.na(si12)) %>% 
+  filter(si13 < 8 | is.na(si13)) %>% 
+  filter(si14 < 8 | is.na(si14)) %>% 
+  filter(si15 < 8 | is.na(si15)) %>% 
+  mutate(
+    risk2 = case_when(
+      si11 == 1 & si12 == 1    ~ 0,
+      si13 == 2 & si15 == 2    ~ 1,
+      si13 == 2 & si15 == 1    ~ 2,
+      si13 == 1 & si14 == 2    ~ 3,
+      si13 == 1 & si14 == 1    ~ 4
+    )
+  ) %>% 
+  select(pid07, hhid07, risk2)
+```
+
+```{r eval=FALSE, include=FALSE}
+frq(risk1, risk1)
+frq(risk2, risk2)
+```
+
+```{r echo=FALSE}
+bus_1 %>% 
+  left_join(risk1) %>% 
+  left_join(risk2) %>% 
+  frq(risk1, risk2)
+```
+
+Combining two risk scores into one we can impute missing values of first measure with non-missing ones from two:  
+
+```{r echo=FALSE}
+bus_1 %>% 
+  left_join(risk1) %>% 
+  left_join(risk2) %>% 
+  frq(is.na(risk1) & !is.na(risk2))
+```
+
+In a very similar procedure variables `si21a` to `si21d` and `si22a` and `si22d` can be used to derive time preference 1 and 2 respectively.   
+
+```{r}
+time1 <- read_dta("data-raw/IFLS4/hh07_all_dta/b3a_si.dta") %>%
+  # zap_label() %>% 
+  zap_labels() %>% zap_formats() %>%  
+  select(-version, -module, -pidlink) %>% 
+  mutate_all(as.numeric) %>% 
+  relocate(hhid07, .after = pid07) %>% 
+  filter(si21a < 8) %>% 
+  filter(si21b < 8 | is.na(si21b)) %>% 
+  filter(si21c < 8 | is.na(si21c)) %>% 
+  filter(si21d < 8 | is.na(si21d)) %>% 
+  filter(si21e < 8 | is.na(si21e)) %>% 
+  mutate(
+    time1 = case_when(
+      si21a == 2                 ~ 0,
+      si21b == 2 & si21d == 2    ~ 1,
+      si21b == 2 & si21d == 1    ~ 2,
+      si21b == 1 & si21c == 2    ~ 3,
+      si21b == 1 & si21c == 1    ~ 4
+    )
+  ) %>% 
+  select(pid07, hhid07, time1)
+```
+
+Then again in a similar vein variables `si22a` to `si22e` can be used to construct risk measure 2.  
+
+```{r}
+time2 <- read_dta("data-raw/IFLS4/hh07_all_dta/b3a_si.dta") %>%
+  # zap_label() %>% 
+  zap_labels() %>% zap_formats() %>%  
+  select(-version, -module, -pidlink) %>% 
+  mutate_all(as.numeric) %>% 
+  relocate(hhid07, .after = pid07) %>% 
+  filter(si22a < 8) %>% 
+  filter(si22b < 8 | is.na(si22b)) %>% 
+  filter(si22c < 8 | is.na(si22c)) %>% 
+  filter(si22d < 8 | is.na(si22d)) %>% 
+  filter(si22e < 8 | is.na(si22e)) %>% 
+  mutate(
+    time2 = case_when(
+      si22a == 2                 ~ 0,
+      si22b == 2 & si22d == 1    ~ 1,
+      si22b == 2 & si22d == 2    ~ 2,
+      si22b == 1 & si22c == 2    ~ 3,
+      si22b == 1 & si22c == 1    ~ 4
+    )
+  ) %>% 
+  select(pid07, hhid07, time2)
+```
+
+```{r eval=FALSE, include=FALSE}
+frq(time1, time1)
+frq(time2, time2)
+```
+
+```{r echo=FALSE}
+bus_1 %>% 
+  left_join(time1) %>% 
+  left_join(time2) %>% 
+  frq(time1, time2)
+```
+
+```{r eval=FALSE, include=FALSE}
+# nothing to rescue 
+bus_1 %>% 
+  left_join(time1) %>% 
+  left_join(time2) %>% 
+  frq(is.na(time1) & !is.na(time2))
+```
 
 ## Disease management
+
+Information about this variable from the paper:  
 
 > We construct a dummy variable that is equal to 1 if respondents checked their blood pressure at least once in the month preceding the interview.  
 
@@ -379,8 +606,16 @@ b3b_rj3 %<>% inner_join(b1_cov) %>%
 rm(b1_cov)
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 frq(b3b_rj3, bp_month)
+```
+
+There is a very big amount of information missing here:  
+
+```{r echo=FALSE}
+bus_1 %>% 
+  left_join(b3b_rj3) %>% 
+  frq(bp_month)
 ```
 
 # Final dataset
@@ -390,6 +625,12 @@ frq(b3b_rj3, bp_month)
 Due to very large amount of missing information on the number of years of education, categorical variable of highest education achieved was used to impute values into simple four categories of 'elementary', 'junior high', 'senior high' and 'university'.  
 
 Similarly, large amount of missings in the disease management indicator was assumed to mean 'no'.  
+
+Last but not least, risk and time preferences are combined across two variables:  
+- if risk 1 is missing and 2 no then 2 is used
+- if risk 1 is zero then two is used instead
+
+Zero and missing values of such constructed variables are then excluded.  
 
 ```{r}
 data <- bus_1 %>% 
@@ -442,18 +683,45 @@ data <- bus_1 %>%
   filter(!is.na(education)) %>%
   filter(education >= 0) %>%
   
+  # time
+  left_join(time1) %>% 
+  left_join(time2) %>% 
+  # imputing missings in 1 from 2
+  mutate(time = ifelse(!is.na(time1), time1, time2)) %>% 
+  # imputing 0 category in 1 from 2
+  mutate(time = ifelse(time1 == 0, time2, time1)) %>% 
+  filter(!is.na(time)) %>% 
+  filter(time > 0) %>% 
+  relocate(time, .before = time1) %>% 
+  
+  # risk
+  left_join(risk1) %>% 
+  left_join(risk2) %>% 
+  # imputing missings in 1 from 2
+  mutate(risk = ifelse(!is.na(risk1), risk1, risk2)) %>% 
+  # imputing 0 category in 1 from 2
+  mutate(risk = ifelse(risk1 == 0, risk2, risk1)) %>% 
+  filter(!is.na(risk)) %>% 
+  filter(risk > 0) %>% 
+  relocate(risk, .before = risk1) %>% 
+  
   # disease management
   left_join(b3b_rj3) %>% 
   # second version imputing missing to zero (ie. 'no')
   mutate(bp_month2 = ifelse(is.na(bp_month), 0, bp_month))
+```
 
-# rm(bus_1, b3b_cd3, b1_ks2, b3b_kk1, b1_pp, b3a_dl1, b3b_rj3)
+```{r include=FALSE}
+rm(bus_1, b3b_cd3, b1_ks2, b3b_kk1, b1_pp, b3a_dl1, b3b_rj3, b3a_si,
+   risk1, risk2, time1, time2); gc()
 ```
 
 ## Dataset
 
 ```{r echo=FALSE}
 data %>% 
+  select(-risk1, -risk2, -time1, -time2) %>% 
+  select(-hhid07_9, -hhid07, - pid07) %>% 
   mutate(sex = factor(sex),
          underdiagnosed = factor(underdiagnosed),
          poor_health = factor(poor_health),
@@ -461,18 +729,59 @@ data %>%
   report::report()
 ```
 
-
 ## Summaries
 
-```{r}
-frq(data, underdiagnosed)
-frq(data, sex)
+Various tabulations and summaries of variables used for selecting patients and running regression models.  
 
-gmodels::CrossTable(data$sex, data$underdiagnosed,
+```{r}
+frq(data, poor_health)
+
+frq(data, underdiagnosed)
+
+gmodels::CrossTable(data$underdiagnosed, data$poor_health,
                     digits = 2, prop.chisq = FALSE)
 
-frq(data %>% filter(underdiagnosed == 0), bp_month)
+summary(data$age)
 
-frq(data, poor_health)
-# frq(data, education)
+summary(data$education)
+
+summary(data$expenditures_log)
+
+summary(data$travel_time)
+
+frq(data, risk)
+
+gmodels::CrossTable(data$risk1, data$risk2,
+                    digits = 2, prop.chisq = FALSE)
+
+frq(data, time)
+
+gmodels::CrossTable(data$time1, data$time2,
+                    digits = 2, prop.chisq = FALSE)
+
+frq(data, sex)
+
+frq(data %>% filter(underdiagnosed == 0), bp_month)
+frq(data %>% filter(underdiagnosed == 0), bp_month2)
+
+
+data_diag <- data %>% 
+  filter(underdiagnosed == 0) %>% 
+  select(-underdiagnosed)
+
+gmodels::CrossTable(data_diag$sex, data_diag$bp_month,
+                    digits = 2, prop.chisq = FALSE)
+
+gmodels::CrossTable(data_diag$sex, data_diag$bp_month2,
+                    digits = 2, prop.chisq = FALSE)
 ```
+
+```{r include=FALSE}
+write_rds(data, "data/data.Rds")
+```
+
+<!-- ----------------------------------------------------- -->
+
+# Computing Environment
+
+`r mu$session()`
