@@ -40,6 +40,10 @@ mu <- Hmisc::markupSpecs$html
 
 # General information 
 
+## Preregistration
+
+**Note:** *the registration 7details on the screenshots below have been entered post-analysis.*  
+
 ## Data 
 
 ```{r include=FALSE}
