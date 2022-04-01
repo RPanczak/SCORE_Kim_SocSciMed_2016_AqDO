@@ -41,7 +41,7 @@ knitr::opts_knit$set(width = 125)
 
 ## Preregistration
 
-**Note:** *the registration 7details on the screenshots below have been entered post-analysis.*  
+**Note:** *the registration details on the screenshots below have been entered post-analysis.*  
 
 ## Data 
 
