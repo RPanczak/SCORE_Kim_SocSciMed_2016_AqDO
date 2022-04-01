@@ -21,7 +21,7 @@ set.seed(12345)
 options(scipen = 999)
 options(max.print = "75")
 library(pacman)
-p_load(tidyverse, magrittr, scales, haven, lubridate, sjmisc)
+p_load(tidyverse, magrittr, scales, haven, lubridate, sjmisc, report)
 ```
 
 ```{r knit-setup, include = FALSE}
@@ -783,6 +783,6 @@ write_rds(data, "data/data.Rds")
 
 # Computing Environment
 
-```{r echo=FALSE}
-report::report(sessionInfo())
+```{r echo=FALSE, results='asis'}
+report(sessionInfo())
 ```
