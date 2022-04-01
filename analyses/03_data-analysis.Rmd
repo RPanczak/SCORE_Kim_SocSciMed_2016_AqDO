@@ -33,7 +33,6 @@ knitr::opts_chunk$set(cache = FALSE,
                       message = FALSE,
                       warning = FALSE)
 knitr::opts_knit$set(width = 125)
-mu <- Hmisc::markupSpecs$html
 ```
 
 <!-- ------------------------------------------------------------ --> 
@@ -379,4 +378,7 @@ I cannot question validity of the paper itself. But I think it's safe to assume 
 
 # Computing Environment
 
-`r mu$session()`
+```{r echo=FALSE}
+report::report(sessionInfo())
+```
+
