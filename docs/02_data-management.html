@@ -5,11 +5,10 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="generator" content="pandoc" />
 
-        <meta name="author" content="Radek Panczak" />
     
-        <meta name="date" content="2022-04-01" />
+        <meta name="date" content="2022-04-22" />
     
-    <title>SCORE: Kim &amp; Radoias (2016) reproduction</title>
+    <title>Source Data Reproduction Attempt to Evaluate 6 Claims from Kim_SocSciMed_2016_AqDO</title>
 
         <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -1845,8 +1844,8 @@ src: url(data:application/font-sfnt;base64,AAEAAAARAQAABAAQR0RFRgs+Cz8AAjwQAAAAQ
    <div class="book with-summary">
       <div class="book-summary">
         <ul>
-          <li class="title">SCORE: Kim &amp; Radoias (2016)
-reproduction</li>
+          <li class="title">Source Data Reproduction Attempt to Evaluate
+6 Claims from Kim_SocSciMed_2016_AqDO</li>
           <li class="divider"></li>
         </ul>
         <nav role="navigation" id="toc">
@@ -1882,9 +1881,7 @@ reproduction</li>
         </nav>
         <ul class="authors">
           <li class="divider"></li>
-                                <li><span><i class="glyphicon glyphicon-user"></i> Radek
-Panczak</span></li>
-                                         <li><span><i class="glyphicon glyphicon-calendar"></i> 2022-04-01</span></li>
+                               <li><span><i class="glyphicon glyphicon-calendar"></i> 2022-04-22</span></li>
                   </ul>     
       </div>
       <div class="book-body fixed">
@@ -1897,10 +1894,9 @@ Panczak</span></li>
       
    
         
-      <h1 class="title">SCORE: Kim &amp; Radoias (2016)
-reproduction</h1>
-         <h1 class="subtitle">Data preparation</h1>
-   
+      <h1 class="title">Source Data Reproduction Attempt to Evaluate 6
+Claims from Kim_SocSciMed_2016_AqDO</h1>
+      
         
 
    
@@ -1909,6 +1905,9 @@ reproduction</h1>
 <!-- Don't indent these lines or it will mess pre blocks indentation --> 
 <!-- ----------------------------------------------------- -->
 <!-- ------------------------------------------------------------ -->
+<p><strong>Reproduction analyst:</strong> Radoslaw Panczak<br />
+<strong>SCORE RR ID:</strong> 65z92<br />
+<strong>OSF Project:</strong> <a href="https://osf.io/7msd8" class="uri">https://osf.io/7msd8</a></p>
 <div id="data-source" class="section level1">
 <h1>Data source</h1>
 <p>The fourth wave of the Indonesia Family Life Survey (IFLS4) available
@@ -2220,7 +2219,7 @@ averse.</p>
 does not specify which of them were used and in which form (one vs. the
 other? combined?).</p>
 <p>Here we prepare all 4 measures (2 for risk and two for time).</p>
-<p>Method of Ng basically takes into accoutn answers to five questions
+<p>Method of Ng basically takes into account answers to five questions
 and follows a flowchart to assign the individual to a risk category
 ranging from 0 to 4.</p>
 <p>From the dataset <code>b3a_si.dta</code> we can use variables:</p>
@@ -2852,17 +2851,17 @@ packages lubridate (version 1.8.0; Garrett Grolemund, Hadley Wickham,
 2011), ggplot2 (version 3.3.5; Wickham. ggplot2: Elegant Graphics for
 Data Analysis. Springer-Verlag New York, 2016.), stringr (version 1.4.0;
 Hadley Wickham, 2019), forcats (version 0.5.1; Hadley Wickham, 2021),
-scales (version 1.1.1; Hadley Wickham and Dana Seidel, 2020), haven
-(version 2.4.3; Hadley Wickham and Evan Miller, 2021), tidyr (version
-1.2.0; Hadley Wickham and Maximilian Girlich, 2022), readr (version
-2.1.2; Hadley Wickham, Jim Hester and Jennifer Bryan, 2022), dplyr
-(version 1.0.8; Hadley Wickham et al., 2022), tibble (version 3.1.6;
-Kirill Müller and Hadley Wickham, 2021), purrr (version 0.3.4; Lionel
-Henry and Hadley Wickham, 2020), sjmisc (version 2.8.9; Lüdecke D,
-2018), report (version 0.5.1; Makowski et al., 2020), pacman (version
-0.5.1; Rinker et al., 2017), magrittr (version 2.0.3; Stefan Milton
-Bache and Hadley Wickham, 2022) and tidyverse (version 1.3.1; Wickham et
-al., 2019).</p>
+scales (version 1.2.0; Hadley Wickham and Dana Seidel, 2022), tidyr
+(version 1.2.0; Hadley Wickham and Maximilian Girlich, 2022), haven
+(version 2.5.0; Hadley Wickham, Evan Miller and Danny Smith, 2022),
+readr (version 2.1.2; Hadley Wickham, Jim Hester and Jennifer Bryan,
+2022), dplyr (version 1.0.8; Hadley Wickham et al., 2022), tibble
+(version 3.1.6; Kirill Müller and Hadley Wickham, 2021), purrr (version
+0.3.4; Lionel Henry and Hadley Wickham, 2020), sjmisc (version 2.8.9;
+Lüdecke D, 2018), report (version 0.5.1; Makowski et al., 2020), pacman
+(version 0.5.1; Rinker et al., 2017), magrittr (version 2.0.3; Stefan
+Milton Bache and Hadley Wickham, 2022) and tidyverse (version 1.3.1;
+Wickham et al., 2019).</p>
 <div id="references" class="section level2">
 <h2>References</h2>
 <ul>
@@ -2874,12 +2873,12 @@ Springer-Verlag New York, 2016.</li>
 Common String Operations. R package version 1.4.0. <a href="https://CRAN.R-project.org/package=stringr" class="uri">https://CRAN.R-project.org/package=stringr</a></li>
 <li>Hadley Wickham (2021). forcats: Tools for Working with Categorical
 Variables (Factors). R package version 0.5.1. <a href="https://CRAN.R-project.org/package=forcats" class="uri">https://CRAN.R-project.org/package=forcats</a></li>
-<li>Hadley Wickham and Dana Seidel (2020). scales: Scale Functions for
-Visualization. R package version 1.1.1. <a href="https://CRAN.R-project.org/package=scales" class="uri">https://CRAN.R-project.org/package=scales</a></li>
-<li>Hadley Wickham and Evan Miller (2021). haven: Import and Export
-‘SPSS’, ‘Stata’ and ‘SAS’ Files. R package version 2.4.3. <a href="https://CRAN.R-project.org/package=haven" class="uri">https://CRAN.R-project.org/package=haven</a></li>
+<li>Hadley Wickham and Dana Seidel (2022). scales: Scale Functions for
+Visualization. R package version 1.2.0. <a href="https://CRAN.R-project.org/package=scales" class="uri">https://CRAN.R-project.org/package=scales</a></li>
 <li>Hadley Wickham and Maximilian Girlich (2022). tidyr: Tidy Messy
 Data. R package version 1.2.0. <a href="https://CRAN.R-project.org/package=tidyr" class="uri">https://CRAN.R-project.org/package=tidyr</a></li>
+<li>Hadley Wickham, Evan Miller and Danny Smith (2022). haven: Import
+and Export ‘SPSS’, ‘Stata’ and ‘SAS’ Files. R package version 2.5.0. <a href="https://CRAN.R-project.org/package=haven" class="uri">https://CRAN.R-project.org/package=haven</a></li>
 <li>Hadley Wickham, Jim Hester and Jennifer Bryan (2022). readr: Read
 Rectangular Text Data. R package version 2.1.2. <a href="https://CRAN.R-project.org/package=readr" class="uri">https://CRAN.R-project.org/package=readr</a></li>
 <li>Hadley Wickham, Romain François, Lionel Henry and Kirill Müller

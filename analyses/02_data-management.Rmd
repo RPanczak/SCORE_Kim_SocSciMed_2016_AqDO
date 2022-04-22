@@ -1,7 +1,5 @@
 ---
-title: "SCORE: Kim & Radoias (2016) reproduction"
-subtitle: "Data preparation"
-author: "Radek Panczak"
+title: "Source Data Reproduction Attempt to Evaluate 6 Claims from Kim_SocSciMed_2016_AqDO"
 date: "`r Sys.Date()`"
 output:
   rmdformats::robobook:
@@ -36,6 +34,10 @@ knitr::opts_knit$set(width = 125)
 ```
 
 <!-- ------------------------------------------------------------ --> 
+
+**Reproduction analyst:** Radoslaw Panczak  
+**SCORE RR ID:** 65z92  
+**OSF Project:** https://osf.io/7msd8  
 
 # Data source 
 
@@ -385,7 +387,7 @@ Paper of Ng defines two measures of risk and two measures of time and does not s
 
 Here we prepare all 4 measures (2 for risk and two for time).  
 
-Method of Ng basically takes into accoutn answers to five questions and follows a flowchart to assign the individual to a risk category ranging from 0 to 4.  
+Method of Ng basically takes into account answers to five questions and follows a flowchart to assign the individual to a risk category ranging from 0 to 4.  
 
 From the dataset `b3a_si.dta` we can use variables:  
 
