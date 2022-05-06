@@ -82,19 +82,15 @@ Complete details on the software & computing environment are given in the dedica
 
 ## Analysis attempt 1
 
-The first analysis followed general ideas regarding data preparation and modelling described above but *only selected respondents in poor health*.  
+The first modelling followed general ideas regarding data preparation and modelling described above but *only selected respondents in poor health*.  
 
 Completed claims: `single-trace`, `21v1on`, `dx1x5w`
 
-## Analysis attepmt 2 
-
-The second analysis *only selected respondents in good health*.  
+The second modelling *only selected respondents in good health*.  
 
 Completed claims: `ok8kxo`, `n3k3qz`  
 
-## Analysis attepmt 3 
-
-The third analysis *only selected respondents in good health with diagnosed hypertension*.   
+The third modelling *only selected respondents in good health with diagnosed hypertension*.   
 
 Completed claim: `8rlrky`  
 
