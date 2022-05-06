@@ -361,6 +361,29 @@ I cannot question validity of the paper itself. But I think it's safe to assume 
 
 <!-- ----------------------------------------------------- -->
 
+# List of files
+
+1. Raw data in Stata's dta format are stored in `data-raw` folder (preserving original names; available from the data provider upon registration; stored on OSF project website). Files used to construct final dataset:  
+
+- bus1_1.dta  
+- bus1_2.dta  
+- b3b_cd3.dta  
+- b1_ks2.dta  
+- b3b_kk1.dta  
+- b1_pp.dta  
+- b3a_dl1.dta  
+- b3a_si.dta  
+- b3b_rj3.dta  
+- b1_cov.dta  
+
+2. Raw data are processed and combined into a final dataset using R markdwon script `02_data-management.Rmd` stored in `analyses` folder of the project (with output of the script stored in `02_data-management.html` file in `docs` folder).  
+
+3. Final dataset `data.Rds` is stored in `data` folder.  
+
+4. Analyses are conducted and documented in `03_data-analysis.Rmd` script (with output of the script stored in `03_data-analysis.html` file in `docs` folder).  
+
+<!-- ----------------------------------------------------- -->
+
 # References
 
 Kim Y, Radoias V (2016) Education, individual time preferences, and asymptomatic disease detection. *Social Science & Medicine* **150**, 15-22, https://doi.org/10.1016/j.socscimed.2015.11.051.  
