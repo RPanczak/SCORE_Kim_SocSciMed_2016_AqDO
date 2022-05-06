@@ -19,7 +19,7 @@ set.seed(12345)
 options(scipen = 999)
 options(max.print = "75")
 library(pacman)
-p_load(tidyverse, scales, magrittr, margins, report)
+p_load(tidyverse, scales, magrittr, margins, report, googlesheets4)
 ```
 
 ```{r knit-setup, include = FALSE}
@@ -43,7 +43,13 @@ knitr::opts_knit$set(width = 125)
 
 ## Preregistration
 
-**Note:** *the registration details on the screenshots below have been entered post-analysis.*  
+Details stored in publicly available Goole Doc:  
+
+```{r}
+sheet_location = "https://docs.google.com/spreadsheets/d/1lqwu5mGKe4URtAgyd0uAOJAU3YmsyKRaLx6eWYicUdY/edit#gid=226716288"
+```
+
+**Note:** *the registration details in tables below have been entered post-analysis.*  
 
 ## Link to analysis script(s)
 
@@ -122,15 +128,7 @@ data_poor_health <- data %>%
 
 Dataset consists of `r number(nrow(data_poor_health), big.mark = ",")` observations. 
 
-### Primary & secondary reproduction criteria
-
-![](../docs/ok8kxo.png)
-
-### Analyst success criteria
-
-All outcomes meet the precise reproduction criteria
-
-## Model 
+### Model 
 
 ```{r}
 claim_ok8kxo <- glm(underdiagnosed ~ 
@@ -144,9 +142,58 @@ claim_ok8kxo <- glm(underdiagnosed ~
 summary(margins(claim_ok8kxo))
 ```
 
-## Reproduction outcome
+### Primary reproduction criteria
+
+```{r}
+primary <- read_sheet(sheet_location,
+                      range = "single_trace!1:6") %>% 
+  slice(-1) %>% 
+  mutate(`Reproduction result` = "")
+
+primary$`Reproduction result`[1] <- number(nrow(data_poor_health))
+
+primary$`Reproduction result`[3] <- summary(margins(claim_ok8kxo)) %>% 
+  filter(factor == "education") %>% 
+  select(AME) %>% 
+  mutate(AME = number(AME, accuracy = 0.000001)) %>% 
+  pluck(1)
+
+primary %>% 
+  kableExtra::kable()
+```
+
+### Secondary reproduction criteria
+
+```{r}
+secondary <- read_sheet(sheet_location,
+                        range = "single_trace!1:10") %>% 
+  slice(8:9) %>% 
+  mutate(`Reproduction result` = "")
+
+secondary$`Reproduction result`[1] <- summary(margins(claim_ok8kxo)) %>% 
+  filter(factor == "education") %>% 
+  select(SE) %>% 
+  mutate(SE = number(SE, accuracy = 0.000001)) %>% 
+  pluck(1)
+
+secondary$`Reproduction result`[2] <- summary(margins(claim_ok8kxo)) %>% 
+  filter(factor == "education") %>% 
+  select(p) %>% 
+  mutate(p = number(p, accuracy = 0.000001)) %>% 
+  pluck(1)
+
+secondary %>% 
+  kableExtra::kable()
+```
+
+### Analyst success criteria
+
+All outcomes meet the precise reproduction criteria
+
+### Reproduction outcome
 
 Based on the criteria above, the claim **did not** reproduce.  
+
 
 ## Claim ID: 21v1on
 
@@ -171,10 +218,6 @@ data_good_health <- data %>%
 
 Dataset consists of `r number(nrow(data_good_health), big.mark = ",")` observations.  
 
-### Reproduction criteria
-
-![](../docs/21v1on.png)
-
 ### Model 
 
 ```{r}
@@ -188,6 +231,54 @@ claim_21v1on <- glm(underdiagnosed ~
 # summary(claim_21v1on)
 summary(margins(claim_21v1on))
 ```
+
+### Primary reproduction criteria
+
+```{r}
+primary <- read_sheet(sheet_location,
+                      range = "Claim_ID_21v1on!1:6") %>% 
+  slice(-1) %>% 
+  mutate(`Reproduction result` = "")
+
+primary$`Reproduction result`[1] <- number(nrow(data_good_health))
+
+primary$`Reproduction result`[3] <- summary(margins(claim_21v1on)) %>% 
+  filter(factor == "education") %>% 
+  select(AME) %>% 
+  mutate(AME = number(AME, accuracy = 0.000001)) %>% 
+  pluck(1)
+
+primary %>% 
+  kableExtra::kable()
+```
+
+### Secondary reproduction criteria
+
+```{r}
+secondary <- read_sheet(sheet_location,
+                        range = "Claim_ID_21v1on!1:10") %>% 
+  slice(8:9) %>% 
+  mutate(`Reproduction result` = "")
+
+secondary$`Reproduction result`[1] <- summary(margins(claim_21v1on)) %>% 
+  filter(factor == "education") %>% 
+  select(SE) %>% 
+  mutate(SE = number(SE, accuracy = 0.000001)) %>% 
+  pluck(1)
+
+secondary$`Reproduction result`[2] <- summary(margins(claim_21v1on)) %>% 
+  filter(factor == "education") %>% 
+  select(p) %>% 
+  mutate(p = number(p, accuracy = 0.000001)) %>% 
+  pluck(1)
+
+secondary %>% 
+  kableExtra::kable()
+```
+
+### Analyst success criteria
+
+All outcomes meet the precise reproduction criteria
 
 ### Reproduction outcome
 
@@ -212,18 +303,62 @@ Selecting respondents in poor health only.
 
 Dataset consists of `r number(nrow(data_poor_health), big.mark = ",")` observations.  
 
-### Reproduction criteria
-
-![](../docs/ok8kxo.png)
-
 ### Model 
 
-Please note that model `claim_ok8kxo` from the single-trace claim described above is used here again.  
+Please note that model `claim_ok8kxo` from the *single-trace* claim described above is used here again.  
 
 ```{r}
 # summary(claim_ok8kxo)
 summary(margins(claim_ok8kxo))
 ```
+
+### Primary reproduction criteria
+
+```{r}
+primary <- read_sheet(sheet_location,
+                      range = "Claim_ID_ok8kxo!1:6") %>% 
+  slice(-1) %>% 
+  mutate(`Reproduction result` = "")
+
+primary$`Reproduction result`[1] <- number(nrow(data_poor_health))
+
+primary$`Reproduction result`[3] <- summary(margins(claim_ok8kxo)) %>% 
+  filter(factor == "education") %>% 
+  select(AME) %>% 
+  mutate(AME = number(AME, accuracy = 0.000001)) %>% 
+  pluck(1)
+
+primary %>% 
+  kableExtra::kable()
+```
+
+### Secondary reproduction criteria
+
+```{r}
+secondary <- read_sheet(sheet_location,
+                        range = "Claim_ID_ok8kxo!1:10") %>% 
+  slice(8:9) %>% 
+  mutate(`Reproduction result` = "")
+
+secondary$`Reproduction result`[1] <- summary(margins(claim_ok8kxo)) %>% 
+  filter(factor == "education") %>% 
+  select(SE) %>% 
+  mutate(SE = number(SE, accuracy = 0.000001)) %>% 
+  pluck(1)
+
+secondary$`Reproduction result`[2] <- summary(margins(claim_ok8kxo)) %>% 
+  filter(factor == "education") %>% 
+  select(p) %>% 
+  mutate(p = number(p, accuracy = 0.000001)) %>% 
+  pluck(1)
+
+secondary %>% 
+  kableExtra::kable()
+```
+
+### Analyst success criteria
+
+All outcomes meet the precise reproduction criteria
 
 ### Reproduction outcome
 
@@ -248,10 +383,6 @@ Selecting respondents in poor health only.
 
 Dataset consists of `r number(nrow(data_poor_health), big.mark = ",")` observations.  
 
-### Reproduction criteria
-
-![](../docs/n3k3qz.png)
-
 ### Model 
 
 See model `claim_ok8kxo` above.    
@@ -259,6 +390,54 @@ See model `claim_ok8kxo` above.
 ```{r}
 summary(margins(claim_ok8kxo))
 ```
+
+### Primary reproduction criteria
+
+```{r}
+primary <- read_sheet(sheet_location,
+                      range = "Claim_ID_n3k3qz!1:6") %>% 
+  slice(-1) %>% 
+  mutate(`Reproduction result` = "")
+
+primary$`Reproduction result`[1] <- number(nrow(data_poor_health))
+
+primary$`Reproduction result`[3] <- summary(margins(claim_ok8kxo)) %>% 
+  filter(factor == "time") %>% 
+  select(AME) %>% 
+  mutate(AME = number(AME, accuracy = 0.000001)) %>% 
+  pluck(1)
+
+primary %>% 
+  kableExtra::kable()
+```
+
+### Secondary reproduction criteria
+
+```{r}
+secondary <- read_sheet(sheet_location,
+                        range = "Claim_ID_n3k3qz!1:10") %>% 
+  slice(8:9) %>% 
+  mutate(`Reproduction result` = "")
+
+secondary$`Reproduction result`[1] <- summary(margins(claim_ok8kxo)) %>% 
+  filter(factor == "time") %>% 
+  select(SE) %>% 
+  mutate(SE = number(SE, accuracy = 0.000001)) %>% 
+  pluck(1)
+
+secondary$`Reproduction result`[2] <- summary(margins(claim_ok8kxo)) %>% 
+  filter(factor == "time") %>% 
+  select(p) %>% 
+  mutate(p = number(p, accuracy = 0.000001)) %>% 
+  pluck(1)
+
+secondary %>% 
+  kableExtra::kable()
+```
+
+### Analyst success criteria
+
+All outcomes meet the precise reproduction criteria
 
 ### Reproduction outcome
 
@@ -283,10 +462,6 @@ Selecting respondents in good health only.
 
 Dataset consists of `r number(nrow(data_good_health), big.mark = ",")` observations.  
 
-### Reproduction criteria
-
-![](../docs/dx1x5w.png)
-
 ### Model 
 
 See model `claim_21v1on` above.    
@@ -294,6 +469,54 @@ See model `claim_21v1on` above.
 ```{r}
 summary(margins(claim_21v1on))
 ```
+
+### Primary reproduction criteria
+
+```{r}
+primary <- read_sheet(sheet_location,
+                      range = "Claim_ID_dx1x5w!1:6") %>% 
+  slice(-1) %>% 
+  mutate(`Reproduction result` = "")
+
+primary$`Reproduction result`[1] <- number(nrow(data_good_health))
+
+primary$`Reproduction result`[3] <- summary(margins(claim_21v1on)) %>% 
+  filter(factor == "time") %>% 
+  select(AME) %>% 
+  mutate(AME = number(AME, accuracy = 0.000001)) %>% 
+  pluck(1)
+
+primary %>% 
+  kableExtra::kable()
+```
+
+### Secondary reproduction criteria
+
+```{r}
+secondary <- read_sheet(sheet_location,
+                        range = "Claim_ID_dx1x5w!1:10") %>% 
+  slice(8:9) %>% 
+  mutate(`Reproduction result` = "")
+
+secondary$`Reproduction result`[1] <- summary(margins(claim_21v1on)) %>% 
+  filter(factor == "time") %>% 
+  select(SE) %>% 
+  mutate(SE = number(SE, accuracy = 0.000001)) %>% 
+  pluck(1)
+
+secondary$`Reproduction result`[2] <- summary(margins(claim_21v1on)) %>% 
+  filter(factor == "time") %>% 
+  select(p) %>% 
+  mutate(p = number(p, accuracy = 0.000001)) %>% 
+  pluck(1)
+
+secondary %>% 
+  kableExtra::kable()
+```
+
+### Analyst success criteria
+
+All outcomes meet the precise reproduction criteria
 
 ### Reproduction outcome
 
@@ -326,23 +549,67 @@ data_diag <- data %>%
 
 Dataset consists of `r number(nrow(data_diag), big.mark = ",")` observations.  
 
-### Reproduction criteria
-
-![](../docs/8rlrky.png)
-
 ### Model 
 
 ```{r}
 claim_8rlrky <- glm(bp_month2 ~ 
-                age + age2 + education +
-                expenditures_log + time + risk +
-                travel_time + sex, 
-              family = binomial(link = "probit"), 
-              data = data_diag)
+                      age + age2 + education +
+                      expenditures_log + time + risk +
+                      travel_time + sex, 
+                    family = binomial(link = "probit"), 
+                    data = data_diag)
 
 # summary(claim_8rlrky)
 summary(margins(claim_8rlrky))
 ```
+
+### Primary reproduction criteria
+
+```{r}
+primary <- read_sheet(sheet_location,
+                      range = "Claim_ID_8rlrky!1:6") %>% 
+  slice(-1) %>% 
+  mutate(`Reproduction result` = "")
+
+primary$`Reproduction result`[1] <- number(nrow(data_diag))
+
+primary$`Reproduction result`[3] <- summary(margins(claim_8rlrky)) %>% 
+  filter(factor == "education") %>% 
+  select(AME) %>% 
+  mutate(AME = number(AME, accuracy = 0.000001)) %>% 
+  pluck(1)
+
+primary %>% 
+  kableExtra::kable()
+```
+
+### Secondary reproduction criteria
+
+```{r}
+secondary <- read_sheet(sheet_location,
+                        range = "Claim_ID_8rlrky!1:10") %>% 
+  slice(8:9) %>% 
+  mutate(`Reproduction result` = "")
+
+secondary$`Reproduction result`[1] <- summary(margins(claim_8rlrky)) %>% 
+  filter(factor == "education") %>% 
+  select(SE) %>% 
+  mutate(SE = number(SE, accuracy = 0.000001)) %>% 
+  pluck(1)
+
+secondary$`Reproduction result`[2] <- summary(margins(claim_8rlrky)) %>% 
+  filter(factor == "education") %>% 
+  select(p) %>% 
+  mutate(p = number(p, accuracy = 0.000001)) %>% 
+  pluck(1)
+
+secondary %>% 
+  kableExtra::kable()
+```
+
+### Analyst success criteria
+
+All outcomes meet the precise reproduction criteria
 
 ### Reproduction outcome
 
@@ -363,7 +630,7 @@ I cannot question validity of the paper itself. But I think it's safe to assume 
 
 # List of files
 
-1. Raw data in Stata's dta format are stored in `data-raw` folder (preserving original names; available from the data provider upon registration; stored on OSF project website). Files used to construct final dataset:  
+1. Raw data in Stata's dta format are stored in `data-raw` folder (preserving original names; available from RAND the data provider [website](https://www.rand.org/well-being/social-and-behavioral-policy/data/FLS/IFLS/ifls4.html); requires registration; stored on OSF project website). Files used to construct final dataset:  
 
 - bus1_1.dta  
 - bus1_2.dta  
