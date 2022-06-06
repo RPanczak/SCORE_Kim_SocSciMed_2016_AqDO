@@ -39,11 +39,17 @@ knitr::opts_knit$set(width = 125)
 **SCORE RR ID:** 65z92  
 **OSF Project:** https://osf.io/7msd8  
 
-# Data source 
+# Data 
+
+## Source 
 
 The fourth wave of the Indonesia Family Life Survey (IFLS4) available for download [here](https://www.rand.org/well-being/social-and-behavioral-policy/data/FLS/IFLS/ifls4.html).  
 
 Documentation is available [here](https://www.rand.org/well-being/social-and-behavioral-policy/data/FLS/IFLS/download.html).  
+
+## Availability 
+
+The data is available for download upon registration but the data custodians ask for not distributing it further so *the OSF [project component](https://osf.io/3xpnu/) that stores the copy of data (both raw and prepared) used in these analyses* has been kept ***private*** and the Github [repository](https://github.com/RPanczak/SCORE_Kim_SocSciMed_2016_AqDO) ***does not contain data either***.  
 
 # Variables
 
@@ -285,7 +291,7 @@ bus_1 %>%
   frq(poor_health)
 ```
 
-## Distance to Health facilities
+## Distance to health facilities
 
 Again paper is rather cryptic and specifies it only as:  
 
@@ -651,7 +657,7 @@ data <- bus_1 %>%
   mutate(expenditures_log = log(expenditures)) %>% 
   select(-expenditures) %>% 
   
-  # bad health
+  # poor health
   left_join(b3b_kk1) %>% 
   # exclude missings
   filter(!is.na(poor_health)) %>%  
@@ -694,6 +700,7 @@ data <- bus_1 %>%
   filter(!is.na(time)) %>% 
   filter(time > 0) %>% 
   relocate(time, .before = time1) %>% 
+  select(-time1, -time2) %>% 
   
   # risk
   left_join(risk1) %>% 
@@ -705,15 +712,17 @@ data <- bus_1 %>%
   filter(!is.na(risk)) %>% 
   filter(risk > 0) %>% 
   relocate(risk, .before = risk1) %>% 
+  select(-risk1, -risk2) %>% 
   
   # disease management
   left_join(b3b_rj3) %>% 
   # second version imputing missing to zero (ie. 'no')
-  mutate(bp_month2 = ifelse(is.na(bp_month), 0, bp_month))
+  mutate(bp_month2 = ifelse(is.na(bp_month), 0, bp_month)) %>% 
+  select(-bp_month)
 ```
 
 ```{r include=FALSE}
-rm(bus_1, b3b_cd3, b1_ks2, b3b_kk1, b1_pp, b3a_dl1, b3b_rj3, b3a_si,
+rm(bus_1, b3b_cd3, b1_ks2, b3b_kk1, b1_pp, b3a_dl1, b3b_rj3,
    risk1, risk2, time1, time2); gc()
 ```
 
@@ -721,27 +730,51 @@ rm(bus_1, b3b_cd3, b1_ks2, b3b_kk1, b1_pp, b3a_dl1, b3b_rj3, b3a_si,
 
 ```{r echo=FALSE}
 data %>% 
-  select(-risk1, -risk2, -time1, -time2) %>% 
   select(-hhid07_9, -hhid07, - pid07) %>% 
   mutate(sex = factor(sex),
          underdiagnosed = factor(underdiagnosed),
          poor_health = factor(poor_health),
-         bp_month = factor(bp_month)) %>% 
+         bp_month2 = factor(bp_month2)) %>% 
   report::report()
 ```
+
+## Codebook
+
+- `hhid07_9`          household ID  
+- `hhid07`            household ID  
+- `pid07`             person ID  
+- `age`               age of individual  
+- `age2`              age squared  
+- `sex`               sex of individual (0 = female, 1 = male)  
+- `underdiagnosed`    binary indicator of being under-diagnosed with blood pressure (0 = no, 1 = yes)
+- `expenditures_log`  nonfood expenditures of household during last month (logged)  
+- `poor_health`       binary indicator of being in poor health (0 = no, 1 = yes)   
+- `travel_time`       distance from the closest health centre  
+- `education`         years of education (imputed)  
+- `time`              time preference (1-4 scale, see Ng 2012 for details)  
+- `risk`              risk preference (1-4 scale, see Ng 2012 for details)  
+- `bp_month2`         blood pressure measurement during last month (0 = no, 1 = yes; imputed)
 
 ## Summaries
 
 Various tabulations and summaries of variables used for selecting patients and running regression models.  
 
+### Sex, poor health & under-diagnosed
+
 ```{r}
+frq(data, sex)
+
 frq(data, poor_health)
 
 frq(data, underdiagnosed)
 
 gmodels::CrossTable(data$underdiagnosed, data$poor_health,
                     digits = 2, prop.chisq = FALSE)
+```
 
+### Continuous variables 
+
+```{r}
 summary(data$age)
 
 summary(data$education)
@@ -749,29 +782,33 @@ summary(data$education)
 summary(data$expenditures_log)
 
 summary(data$travel_time)
+```
 
+### Time & risk 
+
+```{r}
 frq(data, risk)
 
-gmodels::CrossTable(data$risk1, data$risk2,
-                    digits = 2, prop.chisq = FALSE)
+# gmodels::CrossTable(data$risk1, data$risk2,
+#                     digits = 2, prop.chisq = FALSE)
 
 frq(data, time)
 
-gmodels::CrossTable(data$time1, data$time2,
-                    digits = 2, prop.chisq = FALSE)
+# gmodels::CrossTable(data$time1, data$time2,
+#                     digits = 2, prop.chisq = FALSE)
+```
 
-frq(data, sex)
+### Under-diagnosed subsample 
 
-frq(data %>% filter(underdiagnosed == 0), bp_month)
-frq(data %>% filter(underdiagnosed == 0), bp_month2)
-
-
+```{r}
 data_diag <- data %>% 
-  filter(underdiagnosed == 0) %>% 
-  select(-underdiagnosed)
+  filter(underdiagnosed == 0)
 
-gmodels::CrossTable(data_diag$sex, data_diag$bp_month,
-                    digits = 2, prop.chisq = FALSE)
+# frq(data_diag, bp_month)
+frq(data_diag, bp_month2)
+
+# gmodels::CrossTable(data_diag$sex, data_diag$bp_month,
+#                     digits = 2, prop.chisq = FALSE)
 
 gmodels::CrossTable(data_diag$sex, data_diag$bp_month2,
                     digits = 2, prop.chisq = FALSE)
@@ -780,6 +817,14 @@ gmodels::CrossTable(data_diag$sex, data_diag$bp_month2,
 ```{r include=FALSE}
 write_rds(data, "data/data.Rds")
 ```
+
+<!-- ----------------------------------------------------- -->
+
+# References
+
+Kim Y, Radoias V (2016) Education, individual time preferences, and asymptomatic disease detection. *Social Science & Medicine* **150**, 15-22, https://doi.org/10.1016/j.socscimed.2015.11.051.  
+
+Ng J (2012) Elicited Risk and Time Preferences: The Role of Demographics, Cognition, and Interviewers. Working paper. University of Southern California. http://static1.1.sqspcdn.com/static/f/884336/20238159/1347396545633/ng_dev_seminar9-10.pdf  
 
 <!-- ----------------------------------------------------- -->
 
